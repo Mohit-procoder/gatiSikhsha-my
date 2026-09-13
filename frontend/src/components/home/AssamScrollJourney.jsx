@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
@@ -9,6 +9,7 @@ import {
 
 gsap.registerPlugin(ScrollTrigger);
 
+// SchoolIcon must be defined BEFORE STAGES array to avoid hoisting issues
 function SchoolIcon(props) {
   return (
     <svg {...props} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -17,9 +18,6 @@ function SchoolIcon(props) {
   );
 }
 
-// =============================================================================
-// SINGLE SOURCE OF TRUTH: OFFICIAL 10-STEP SCHEDULE
-// =============================================================================
 export const STAGES = [
   {
     step: '01',
@@ -169,28 +167,26 @@ const AssamScrollJourney = () => {
 
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [nodePositions, setNodePositions] = useState(NODE_COORDS_INIT);
+  const [nodePositions, setNodePositions] = useState(() =>
+    STAGES.map((s) => ({ x: 200, y: (s.percent / 100) * 6000 }))
+  );
 
-  // Recalculate node positions from the actual rendered SVG path after mount
+  // Calculate precise milestone node coordinates once path is mounted
   useEffect(() => {
-    const pathEl = pathRef.current;
-    if (!pathEl) return;
-    const totalLen = pathEl.getTotalLength();
+    if (pathRef.current) {
+      const pathEl = pathRef.current;
+      const totalLen = pathEl.getTotalLength();
+      const positions = STAGES.map((s) => {
+        const pt = pathEl.getPointAtLength((s.percent / 100) * totalLen);
+        return { x: pt.x, y: pt.y };
+      });
+      setNodePositions(positions);
 
-    const positions = STAGES.map((s) => {
-      const pt = pathEl.getPointAtLength((s.percent / 100) * totalLen);
-      return { x: pt.x, y: pt.y };
-    });
-    setNodePositions(positions);
-
-    if (activeTrailRef.current) {
-      activeTrailRef.current.style.strokeDasharray = `${totalLen}`;
-      activeTrailRef.current.style.strokeDashoffset = `${totalLen}`;
-    }
-
-    const startPt = pathEl.getPointAtLength(0);
-    if (boyRef.current) {
-      boyRef.current.setAttribute('transform', `translate(${startPt.x},${startPt.y}) scale(0.65,0.65)`);
+      // Initialize active trail strokeDash
+      if (activeTrailRef.current) {
+        activeTrailRef.current.style.strokeDasharray = `${totalLen}`;
+        activeTrailRef.current.style.strokeDashoffset = `${totalLen}`;
+      }
     }
   }, []);
 
@@ -201,17 +197,22 @@ const AssamScrollJourney = () => {
       const pathEl = pathRef.current;
       const boyEl = boyRef.current;
       const containerEl = containerRef.current;
+
       if (!pathEl || !boyEl || !containerEl) return;
 
       const pathLength = pathEl.getTotalLength();
 
+      // If reduced motion is preferred, initialize student at stage 1 without heavy scroll scrubbing
       if (prefersReducedMotion) {
         const startPt = pathEl.getPointAtLength(0);
-        boyEl.setAttribute('transform', `translate(${startPt.x},${startPt.y}) scale(0.65,0.65)`);
-        if (activeTrailRef.current) activeTrailRef.current.style.strokeDashoffset = '0';
+        boyEl.setAttribute('transform', `translate(${startPt.x}, ${startPt.y})`);
+        if (activeTrailRef.current) {
+          activeTrailRef.current.style.strokeDashoffset = '0';
+        }
         return;
       }
 
+      // Master ScrollTrigger: Unified Single Source of Truth for Road & Child
       ScrollTrigger.create({
         trigger: containerEl,
         start: 'top top',
@@ -221,20 +222,32 @@ const AssamScrollJourney = () => {
           const progress = Math.min(1, Math.max(0, self.progress));
           setScrollProgress(progress);
 
-          // Active trail
+          // 1. Synchronized Active Road Trail Drawing
           if (activeTrailRef.current) {
-            activeTrailRef.current.style.strokeDashoffset = pathLength * (1 - progress);
+            const currentOffset = pathLength * (1 - progress);
+            activeTrailRef.current.style.strokeDashoffset = currentOffset;
           }
 
-          // Student position along serpentine path
+          // 2. Mathematically Synchronized Student Position & Tangent Orientation
           const currentDistance = progress * pathLength;
           const currentPoint = pathEl.getPointAtLength(currentDistance);
-          const d1 = Math.max(0, currentDistance - 8);
-          const d2 = Math.min(pathLength, currentDistance + 8);
-          const p1 = pathEl.getPointAtLength(d1);
-          const p2 = pathEl.getPointAtLength(d2);
+
+          // Calculate trajectory vector using nearby points
+          const sampleDist1 = Math.max(0, currentDistance - 6);
+          const sampleDist2 = Math.min(pathLength, currentDistance + 6);
+          const p1 = pathEl.getPointAtLength(sampleDist1);
+          const p2 = pathEl.getPointAtLength(sampleDist2);
+
           const dx = p2.x - p1.x;
           const dy = p2.y - p1.y;
+          const rawAngle = Math.atan2(dy, dx) * (180 / Math.PI) - 90;
+          // Gentle tilt bounded between [-12deg, +12deg] for natural posture
+          const gentleAngle = Math.max(-12, Math.min(12, rawAngle * 0.25));
+
+          boyEl.setAttribute(
+            'transform',
+            `translate(${currentPoint.x}, ${currentPoint.y}) rotate(${gentleAngle})`
+          );
 
           // 3. Environmental Vegetation Multi-Depth Parallax
           if (vegSlowRef.current) {
@@ -247,13 +260,16 @@ const AssamScrollJourney = () => {
             gsap.set(vegFastRef.current, { y: progress * 480 });
           }
 
-          // Checkpoint: closest to current distance
+          // 6. Checkpoint Activation synchronized with progress
           let currentIdx = 0;
-          let minDiff = Infinity;
-          STAGES.forEach((s, i) => {
-            const diff = Math.abs((s.percent / 100) * pathLength - currentDistance);
-            if (diff < minDiff) { minDiff = diff; currentIdx = i; }
-          });
+          for (let i = 0; i < STAGES.length; i++) {
+            const prevPercent = i === 0 ? 0 : STAGES[i - 1].percent;
+            const currPercent = STAGES[i].percent;
+            const threshold = (prevPercent + currPercent) / 2;
+            if (progress * 100 >= threshold) {
+              currentIdx = i;
+            }
+          }
           setActiveStepIndex(currentIdx);
         }
       });
@@ -262,30 +278,32 @@ const AssamScrollJourney = () => {
     return () => ctx.revert();
   }, []);
 
-  const activeStage = STAGES[activeStepIndex] || STAGES[0];
-
   return (
     <section
       ref={containerRef}
       id="journey"
-      className="relative w-full bg-gradient-to-b from-[#faf8f5] via-[#f3ede3] to-[#faf8f5]"
-      style={{ height: '500vh' }}
+      className="relative w-full bg-gradient-to-b from-[#faf8f5] via-[#f3ede3] to-[#faf8f5] overflow-hidden"
+      style={{ height: '700vh' }}
     >
+      {/* ==================================================================== */}
+      {/* STICKY JOURNEY FRAME: HEADERS, PARALLAX SCENERY & HUD */}
+      {/* ==================================================================== */}
       <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-between pointer-events-none z-20">
-
-        {/* ── HEADER (Top) ── */}
-        <div className="shrink-0 pt-14 sm:pt-16 px-4 text-center z-30 pointer-events-auto max-w-5xl mx-auto w-full">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-100/90 text-emerald-900 border border-emerald-300 text-xs font-bold mb-3 shadow-xs">
-            <Sparkles className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
+        {/* Top Header Banner */}
+        <div className="pt-20 px-4 text-center z-30 pointer-events-auto max-w-4xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-semibold mb-1.5 shadow-xs">
+            <Sparkles className="w-3.5 h-3.5 text-amber-600" />
             <span>Scroll-Driven State Innovation Odyssey</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">
             Follow the Student Journey Through Assam
           </h2>
-          <p className="text-sm sm:text-base text-slate-600 mt-2 max-w-2xl mx-auto hidden sm:block leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl mx-auto">
             Scroll down to watch our student innovator travel through tea gardens, knowledge camps, and zonal hackathons to the state final.
           </p>
-          <div className="w-full max-w-lg mx-auto mt-3 h-2 bg-slate-200/80 rounded-full overflow-hidden border border-slate-300/60">
+
+          {/* Progress Bar */}
+          <div className="w-full max-w-md mx-auto mt-2.5 h-1.5 bg-slate-200/80 rounded-full overflow-hidden p-0.5 border border-slate-300/60">
             <div
               className="h-full bg-gradient-to-r from-emerald-600 via-teal-500 to-amber-500 rounded-full transition-all duration-150"
               style={{ width: `${Math.min(100, Math.max(0, scrollProgress * 100))}%` }}
@@ -306,41 +324,58 @@ const AssamScrollJourney = () => {
               <path d="M 100,260 L 190,140 L 290,210 L 450,120 L 450,260 Z" fill="#9dbfce" opacity="0.6" />
             </svg>
           </div>
-          <div ref={vegMedRef} className="absolute right-0 top-1/3 opacity-30">
-            <svg width="500" height="360" viewBox="0 0 460 320" className="translate-x-16">
+
+          {/* Layer 2: Rolling Assam Tea Garden Terraces */}
+          <div ref={vegMedRef} className="absolute right-0 top-1/4 will-change-transform">
+            <svg width="460" height="320" viewBox="0 0 460 320" className="translate-x-16">
               <path d="M 0,320 Q 140,180 320,230 Q 390,250 460,210 L 460,320 Z" fill="#2d6a4f" opacity="0.8" />
-              <circle cx="180" cy="230" r="24" fill="#52b788" opacity="0.7" /><circle cx="220" cy="225" r="28" fill="#40916c" opacity="0.8" />
-              <circle cx="260" cy="240" r="26" fill="#2d6a4f" /><circle cx="310" cy="235" r="30" fill="#52b788" opacity="0.8" />
+              <circle cx="180" cy="230" r="24" fill="#52b788" opacity="0.7" />
+              <circle cx="220" cy="225" r="28" fill="#40916c" opacity="0.8" />
+              <circle cx="260" cy="240" r="26" fill="#2d6a4f" />
+              <circle cx="310" cy="235" r="30" fill="#52b788" opacity="0.8" />
             </svg>
           </div>
-          <div ref={vegFastRef} className="absolute -right-16 bottom-0 opacity-30">
-            <svg width="500" height="560" viewBox="0 0 450 520" className="overflow-visible">
-              <defs><linearGradient id="leaf-grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#74c69d" /><stop offset="40%" stopColor="#40916c" /><stop offset="100%" stopColor="#1b4332" /></linearGradient></defs>
-              <path d="M 200,520 C 150,390 80,290 20,220 C -10,180 60,130 140,160 C 240,200 380,300 450,520 Z" fill="url(#leaf-grad)" filter="drop-shadow(-8px -4px 18px rgba(15,41,66,0.15))" />
+
+
+
+          {/* Layer 4: Giant Tropical Elephant-Ear Leaves extending DELIBERATELY OUTSIDE viewport edge */}
+          <div ref={vegFastRef} className="absolute -right-16 bottom-0 will-change-transform pointer-events-none">
+            <svg width="450" height="520" viewBox="0 0 450 520" className="overflow-visible">
+              <defs>
+                <linearGradient id="leaf-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#74c69d" />
+                  <stop offset="40%" stopColor="#40916c" />
+                  <stop offset="100%" stopColor="#1b4332" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M 200,520 C 150,390 80,290 20,220 C -10,180 60,130 140,160 C 240,200 380,300 450,520 Z"
+                fill="url(#leaf-grad)"
+                filter="drop-shadow(-8px -4px 18px rgba(15,41,66,0.15))"
+              />
               <path d="M 200,520 Q 120,320 70,180" stroke="#a7f3d0" strokeWidth="4" fill="none" opacity="0.6" />
-              <path d="M 300,520 C 260,360 200,260 120,200 C 100,180 170,150 240,190 C 330,240 420,360 480,520 Z" fill="#2d6a4f" opacity="0.9" />
+              <path
+                d="M 300,520 C 260,360 200,260 120,200 C 100,180 170,150 240,190 C 330,240 420,360 480,520 Z"
+                fill="#2d6a4f"
+                opacity="0.9"
+              />
             </svg>
           </div>
         </div>
 
-        {/* ── MIDDLE MAIN ROW (Lady - Serpentine Road/Card - Rhino) ── */}
-        <div className="flex-1 flex flex-row items-center justify-between px-2 sm:px-4 lg:px-8 w-full max-w-[1600px] mx-auto min-h-0 relative z-20 overflow-hidden gap-1 sm:gap-3">
-
-
-
-        </div>
-
-        {/* ── BOTTOM HUD ── */}
-        <div className="shrink-0 pb-4 sm:pb-6 px-4 sm:px-8 z-30 flex items-center justify-between pointer-events-auto text-xs font-semibold text-slate-600">
+        {/* BOTTOM HUD Indicator */}
+        <div className="pb-6 px-6 z-30 flex items-center justify-between pointer-events-auto text-xs font-semibold text-slate-600">
           <div className="flex items-center gap-2 bg-white/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-200 shadow-sm">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
             <span>Stage {STAGES[activeStepIndex]?.step || String(activeStepIndex + 1).padStart(2, '0')} of 09: {STAGES[activeStepIndex]?.title}</span>
           </div>
+
           <div className="hidden sm:flex items-center gap-2 text-emerald-800 bg-emerald-50/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-emerald-200">
             <span>Scroll down to advance journey</span>
             <ArrowDown className="w-3.5 h-3.5 animate-bounce" />
           </div>
         </div>
+      </div>
 
       {/* ==================================================================== */}
       {/* ZONE 2 (CENTER): SCROLLING PATHWAY & MATHEMATICALLY BOUND STUDENT */}
