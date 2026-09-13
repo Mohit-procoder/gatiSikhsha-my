@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from app.utils.db import get_db
 from app.utils.helpers import hash_password, generate_school_code, generate_team_code
 
@@ -11,45 +11,133 @@ def seed_database(app=None):
         return
 
     print("[SEED] Populating database with Assam Future Innovation Program initial data...")
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
-    # 1. Seed Demo Accounts
+    # 1. Seed Demo Accounts for All Portal Roles
     admin_res = db.users.insert_one({
+        "user_id": "AFIP-ADM-000001",
         "email": "admin@afip.demo",
+        "phone": "+91 361 2237001",
         "password_hash": hash_password("Admin@123"),
         "role": "admin",
         "name": "State Mission Director (AFIP)",
         "status": "active",
+        "is_verified": True,
+        "last_login": now,
         "created_at": now,
         "updated_at": now
     })
 
     school_user = db.users.insert_one({
+        "user_id": "AFIP-SCH-000001",
         "email": "school@afip.demo",
+        "phone": "+91 361 2578890",
         "password_hash": hash_password("School@123"),
         "role": "school",
         "name": "Brahmaputra Public School",
         "status": "approved",
+        "is_verified": True,
+        "last_login": now,
+        "created_at": now,
+        "updated_at": now
+    })
+
+    mentor_user = db.users.insert_one({
+        "user_id": "AFIP-MEN-000001",
+        "email": "mentor@afip.demo",
+        "phone": "+91 94350 11223",
+        "password_hash": hash_password("Mentor@123"),
+        "role": "mentor",
+        "name": "Dr. Pranjal Borah",
+        "status": "active",
+        "is_verified": True,
+        "last_login": now,
         "created_at": now,
         "updated_at": now
     })
 
     evaluator_user = db.users.insert_one({
+        "user_id": "AFIP-EVA-000001",
         "email": "evaluator@afip.demo",
+        "phone": "+91 98640 44556",
         "password_hash": hash_password("Evaluator@123"),
         "role": "evaluator",
         "name": "Dr. Ananya Sharma",
         "status": "approved",
+        "is_verified": True,
+        "last_login": now,
+        "created_at": now,
+        "updated_at": now
+    })
+
+    district_user = db.users.insert_one({
+        "user_id": "AFIP-DIST-KAM",
+        "email": "district@afip.demo",
+        "phone": "+91 361 2234567",
+        "password_hash": hash_password("District@123"),
+        "role": "district",
+        "district": "Kamrup",
+        "name": "Kamrup District Innovation Officer",
+        "status": "active",
+        "is_verified": True,
+        "last_login": now,
+        "created_at": now,
+        "updated_at": now
+    })
+
+    district_dib_user = db.users.insert_one({
+        "user_id": "AFIP-DIST-DIB",
+        "email": "district_dib@afip.demo",
+        "phone": "+91 373 2320011",
+        "password_hash": hash_password("District@123"),
+        "role": "district",
+        "district": "Dibrugarh",
+        "name": "Dibrugarh District Innovation Officer",
+        "status": "active",
+        "is_verified": True,
+        "last_login": now,
+        "created_at": now,
+        "updated_at": now
+    })
+
+    jury_user = db.users.insert_one({
+        "user_id": "AFIP-JUR-000001",
+        "email": "jury@afip.demo",
+        "phone": "+91 94351 77889",
+        "password_hash": hash_password("Jury@123"),
+        "role": "jury",
+        "name": "Prof. Hemanta Goswami",
+        "status": "active",
+        "is_verified": True,
+        "last_login": now,
+        "created_at": now,
+        "updated_at": now
+    })
+
+    state_jury_user = db.users.insert_one({
+        "user_id": "AFIP-STJ-000001",
+        "email": "statejury@afip.demo",
+        "phone": "+91 94352 99001",
+        "password_hash": hash_password("StateJury@123"),
+        "role": "state_jury",
+        "name": "State Grand Jury Chair",
+        "status": "active",
+        "is_verified": True,
+        "last_login": now,
         "created_at": now,
         "updated_at": now
     })
 
     student_user = db.users.insert_one({
+        "user_id": "AFIP-STU-000001",
         "email": "student@afip.demo",
+        "phone": "+91 99540 12345",
         "password_hash": hash_password("Student@123"),
         "role": "student",
         "name": "Aarav Das",
         "status": "active",
+        "is_verified": True,
+        "last_login": now,
         "created_at": now,
         "updated_at": now
     })
@@ -194,15 +282,37 @@ def seed_database(app=None):
         })
         evaluator_ids.append(edoc.inserted_id)
 
+    # 4b. Seed Primary Mentor Document for Dr. Pranjal Borah
+    primary_mentor = db.mentors.insert_one({
+        "user_id": mentor_user.inserted_id,
+        "mentor_custom_id": "AFIP-MEN-000001",
+        "school_id": primary_school_id,
+        "school_name": "Brahmaputra Public School",
+        "district": "Kamrup",
+        "full_name": "Dr. Pranjal Borah",
+        "email": "mentor@afip.demo",
+        "phone": "+91 94350 11223",
+        "designation": "Senior STEM Faculty & Robotics Club Lead",
+        "status": "active",
+        "created_at": now,
+        "updated_at": now
+    })
+    primary_mentor_id = primary_mentor.inserted_id
+
     # 5. Primary Student Team: Brahmaputra Innovators
     primary_team = db.teams.insert_one({
+        "team_custom_id": "AFIP-KAM-SCH000001-T001",
         "team_code": "AFIP-T-00001",
         "team_name": "Brahmaputra Innovators",
         "school_id": primary_school_id,
+        "school_name": "Brahmaputra Public School",
+        "district": "Kamrup",
         "category": "IX-X",
-        "mentor_name": "Rupali Hazarika",
+        "mentor_id": primary_mentor_id,
+        "mentor_name": "Dr. Pranjal Borah",
         "status": "active",
-        "competition_stage": "online_bootcamp",
+        "competition_stage": "district_shortlisting",
+        "qualification_status": "shortlisted",
         "project_id": None,
         "quiz_score": 28,
         "evaluation_score": 92.5,
@@ -213,15 +323,18 @@ def seed_database(app=None):
 
     # Link primary student
     db.students.insert_one({
+        "student_custom_id": "AFIP-STU-000001",
         "user_id": student_user.inserted_id,
         "team_id": primary_team_id,
         "school_id": primary_school_id,
+        "district": "Kamrup",
         "full_name": "Aarav Das",
         "email": "student@afip.demo",
         "grade": "Class X",
         "phone": "+91 98642 11223",
         "is_leader": True,
-        "created_at": now
+        "created_at": now,
+        "updated_at": now
     })
 
     # Additional teammates for Aarav
@@ -230,32 +343,39 @@ def seed_database(app=None):
         ("Tanmoy Medhi", "tanmoy.m@afip.demo", "Class IX"),
         ("Simanta Borah", "simanta.b@afip.demo", "Class X")
     ]
-    for t_name, t_email, t_grade in teammates:
+    for idx_tm, (t_name, t_email, t_grade) in enumerate(teammates, start=2):
         t_user = db.users.insert_one({
+            "user_id": f"AFIP-STU-{idx_tm:06d}",
             "email": t_email,
             "password_hash": hash_password("Student@123"),
             "role": "student",
             "name": t_name,
+            "district": "Kamrup",
             "status": "active",
             "created_at": now,
             "updated_at": now
         })
         db.students.insert_one({
+            "student_custom_id": f"AFIP-STU-{idx_tm:06d}",
             "user_id": t_user.inserted_id,
             "team_id": primary_team_id,
             "school_id": primary_school_id,
+            "district": "Kamrup",
             "full_name": t_name,
             "email": t_email,
             "grade": t_grade,
             "is_leader": False,
-            "created_at": now
+            "created_at": now,
+            "updated_at": now
         })
 
     # 6. Primary Project Submission for Brahmaputra Innovators
     primary_project = db.projects.insert_one({
+        "project_custom_id": "AFIP-PRJ-000001",
         "title": "Smart Brahmaputra Flood Early Warning & Community Alert System",
         "team_id": primary_team_id,
         "school_id": primary_school_id,
+        "district": "Kamrup",
         "category": "IX-X",
         "theme": "Flood Resilience",
         "problem_statement": "Annual Brahmaputra river surges frequently displace riverside agricultural communities and livestock in Assam due to the absence of hyper-local, low-cost water level telemetry.",
@@ -273,6 +393,26 @@ def seed_database(app=None):
         "presentation_link": "https://slides.afip.demo.assam.gov.in/brahmaputra-sentinel",
         "status": "evaluated",
         "is_showcased": True,
+        "jury_remarks": [
+            {
+                "remark_id": "REM-001",
+                "author_id": str(evaluator_id),
+                "author_role": "evaluator",
+                "author_name": "Dr. Ananya Sharma",
+                "remark": "Outstanding practical prototype addressing seasonal floods in Brahmaputra basin. Recommended for state advancement.",
+                "visibility": "RELEASED",
+                "created_at": now - timedelta(days=1)
+            },
+            {
+                "remark_id": "REM-002",
+                "author_id": str(evaluator_id),
+                "author_role": "evaluator",
+                "author_name": "Dr. Ananya Sharma",
+                "remark": "Internal jury note: Confirm battery housing IP67 sealing test results before state jury demonstration.",
+                "visibility": "INTERNAL",
+                "created_at": now - timedelta(days=1)
+            }
+        ],
         "created_at": now - timedelta(days=5),
         "updated_at": now
     })
@@ -341,17 +481,25 @@ def seed_database(app=None):
 
     for idx, (p_title, theme, cat, eval_score) in enumerate(project_catalog, start=2):
         sch_id = school_ids[idx % len(school_ids)]
+        sch_doc = db.schools.find_one({"_id": sch_id})
+        sch_dist = sch_doc.get("district", "Kamrup") if sch_doc else "Kamrup"
+        sch_name = sch_doc.get("school_name", "") if sch_doc else ""
         t_code = f"AFIP-T-{idx:05d}"
+        t_custom = f"AFIP-{sch_dist[:3].upper()}-SCH{idx:03d}-T001"
         t_name = f"{theme.split()[0]} Innovators {idx}"
 
         t_res = db.teams.insert_one({
+            "team_custom_id": t_custom,
             "team_code": t_code,
             "team_name": t_name,
             "school_id": sch_id,
+            "school_name": sch_name,
+            "district": sch_dist,
             "category": cat,
             "mentor_name": f"STEM Mentor {idx}",
             "status": "active",
-            "competition_stage": "online_bootcamp",
+            "competition_stage": "district_shortlisting",
+            "qualification_status": "shortlisted" if eval_score >= 90 else "qualified",
             "project_id": None,
             "quiz_score": int(eval_score * 0.3),
             "evaluation_score": eval_score,
@@ -502,11 +650,87 @@ def seed_database(app=None):
     }
     db.quizzes.insert_one(quiz_doc)
 
-    # 10. Seed Competition Stage Settings & Leaderboard Settings
+    # 10. Seed Active Rubrics for Technical, Jury & State Jury
+    rubrics_data = [
+        {
+            "rubric_type": "TECHNICAL",
+            "title": "Technical Innovation & Feasibility Rubric",
+            "total_max": 100,
+            "is_active": True,
+            "criteria": [
+                {"key": "innovation", "label": "Innovation & Originality", "max": 20, "desc": "Novelty of approach, uniqueness vs standard hobby kits."},
+                {"key": "problem_understanding", "label": "Problem Understanding & Context", "max": 15, "desc": "Clarity of the specific Assam problem and beneficiary empathy."},
+                {"key": "technical_implementation", "label": "Technical Implementation", "max": 20, "desc": "Hardware craft, software robustness, sensor integration."},
+                {"key": "feasibility", "label": "Feasibility & Workability", "max": 15, "desc": "Viability under real Assam field conditions (flooding, power outages)."},
+                {"key": "social_impact", "label": "Social & Regional Impact", "max": 15, "desc": "Potential to protect lives, boost livelihoods or environment."},
+                {"key": "scalability", "label": "Scalability & Replication", "max": 10, "desc": "Ease of expanding across other Assam blocks and districts."},
+                {"key": "presentation", "label": "Presentation & Documentation", "max": 5, "desc": "Clarity of explanation, structure of demo & materials."}
+            ],
+            "created_at": now,
+            "updated_at": now
+        },
+        {
+            "rubric_type": "JURY",
+            "title": "Zonal Jury Evaluation Rubric",
+            "total_max": 100,
+            "is_active": True,
+            "criteria": [
+                {"key": "innovation_originality", "label": "Innovation & Originality", "max": 25, "desc": "Originality of concept, problem novelty, out-of-the-box thinking."},
+                {"key": "regional_impact", "label": "Community & Regional Impact", "max": 20, "desc": "Significance of impact on Assam communities, ecology, or livelihoods."},
+                {"key": "technical_feasibility", "label": "Technical Feasibility & Viability", "max": 20, "desc": "Practicality of prototype execution, durability in Assam field environments."},
+                {"key": "presentation_pitch", "label": "Student Presentation & Demonstration", "max": 15, "desc": "Pitch clarity, demonstration quality, articulate Q&A defense."},
+                {"key": "team_dynamics", "label": "Team Synergy & Inclusive Collaboration", "max": 10, "desc": "Evidence of genuine student teamwork, division of labor, shared leadership."},
+                {"key": "scalability_market", "label": "Scalability & Deployment Potential", "max": 10, "desc": "Potential to deploy at district/state scale or commercialize."}
+            ],
+            "created_at": now,
+            "updated_at": now
+        },
+        {
+            "rubric_type": "STATE_JURY",
+            "title": "State Grand Finale Jury Rubric",
+            "total_max": 100,
+            "is_active": True,
+            "criteria": [
+                {"key": "transformative_impact", "label": "Transformative State & Social Impact", "max": 25, "desc": "Potential to transform Assam agriculture, flood mitigation, tea industry, or public health."},
+                {"key": "innovation_breakthrough", "label": "Breakthrough Innovation & IP Potential", "max": 25, "desc": "Original technological novelty, patentability, unique hardware/software architecture."},
+                {"key": "execution_excellence", "label": "Prototype Maturity & Execution Rigor", "max": 20, "desc": "Functional robustness, real-world stress test performance, clean build."},
+                {"key": "defense_articulation", "label": "Grand Jury Defense & Q&A Mastery", "max": 15, "desc": "Command over technology, handling rigorous technical cross-examination."},
+                {"key": "state_scalability", "label": "Commercialization & State Deployment Road", "max": 15, "desc": "Viable deployment roadmap across all 35 Assam districts."}
+            ],
+            "created_at": now,
+            "updated_at": now
+        }
+    ]
+    for rdoc in rubrics_data:
+        db.rubrics.update_one({"rubric_type": rdoc["rubric_type"]}, {"$set": rdoc}, upsert=True)
+
+    # 11. Seed Jury Assignment for Demo Jury Member Prof. Hemanta Goswami
+    db.evaluation_assignments.insert_one({
+        "team_id": primary_team_id,
+        "project_id": primary_project_id,
+        "evaluator_id": jury_user.inserted_id,
+        "assignment_type": "JURY",
+        "assigned_by": admin_res.inserted_id,
+        "assigned_at": now - timedelta(days=2),
+        "deadline": "2026-12-25T23:59:59Z",
+        "status": "assigned",
+        "conflict_status": "no_conflict"
+    })
+
+    # 12. Mark Top 4 teams as State Finalists for State Grand Jury
+    db.teams.update_many(
+        {"evaluation_score": {"$gte": 93.0}},
+        {"$set": {
+            "qualification_status": "finalist",
+            "competition_stage": "state_finale"
+        }}
+    )
+
+    # 13. Seed Competition Stage Settings & Leaderboard Settings
     db.settings.update_one(
         {"key": "competition"},
         {"$set": {
-            "current_stage": "online_bootcamp",
+            "current_stage": "district_shortlisting",
             "leaderboard_public": True,
             "program_name": "Assam Future Innovation Program",
             "updated_at": now
@@ -514,12 +738,14 @@ def seed_database(app=None):
         upsert=True
     )
 
-    # 11. Seed Initial Notifications
+    # 14. Seed Initial Notifications
     notifications_data = [
         ("all", None, "Welcome to AFIP 2026", "State-wide innovation registrations are now open for Classes VI-XII across all 33 districts of Assam.", "announcement"),
         ("school", school_user.inserted_id, "School Registration Approved", "Brahmaputra Public School has been officially registered with School Code AFIP-AS-KAM-00001.", "approval"),
         ("student", student_user.inserted_id, "Assessment Portal Live", "The 20-Hour Bootcamp Knowledge Assessment is now open for your team.", "quiz"),
-        ("evaluator", evaluator_user.inserted_id, "Assigned for Evaluation", "You have 2 student project submissions queued in your review panel.", "assignment")
+        ("evaluator", evaluator_user.inserted_id, "Assigned for Evaluation", "You have 2 student project submissions queued in your review panel.", "assignment"),
+        ("jury", jury_user.inserted_id, "New Jury Review Assigned", "You have been assigned to evaluate Brahmaputra Innovators in the Zonal Jury round.", "assignment"),
+        ("state_jury", state_jury_user.inserted_id, "State Grand Finalists Ready", "Top qualified state finalists are queued in your Grand Jury panel.", "assignment")
     ]
     for role, rec_id, title, msg, n_type in notifications_data:
         db.notifications.insert_one({
@@ -532,4 +758,4 @@ def seed_database(app=None):
             "created_at": now
         })
 
-    print("[SEED] Successfully seeded all accounts, schools, teams, projects, quizzes, and stages!")
+    print("[SEED] Successfully seeded all accounts, schools, teams, projects, rubrics, jury assignments, quizzes, and stages!")

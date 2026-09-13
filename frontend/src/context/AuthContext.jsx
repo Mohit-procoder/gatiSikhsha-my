@@ -21,10 +21,10 @@ export const AuthProvider = ({ children }) => {
       try {
         const res = await api.get('/auth/me');
         if (res.data && res.data.data) {
-          const { user: userData, school, student, team, evaluator } = res.data.data;
+          const { user: userData, school, student, team, evaluator, mentor, district, jury, state_jury } = res.data.data;
           setUser(userData);
           setRole(userData.role);
-          setProfile({ school, student, team, evaluator });
+          setProfile({ school, student, team, evaluator, mentor, district, jury, state_jury });
         }
       } catch (err) {
         console.error('Session expired or invalid:', err);
@@ -44,13 +44,13 @@ export const AuthProvider = ({ children }) => {
     });
 
     if (res.data && res.data.data) {
-      const { token: accessToken, user: userData, school, student, team, evaluator } = res.data.data;
+      const { token: accessToken, user: userData, school, student, team, evaluator, mentor, district, jury, state_jury } = res.data.data;
       localStorage.setItem('afip_token', accessToken);
       localStorage.setItem('afip_user', JSON.stringify(userData));
       setToken(accessToken);
       setUser(userData);
       setRole(userData.role);
-      setProfile({ school, student, team, evaluator });
+      setProfile({ school, student, team, evaluator, mentor, district, jury, state_jury });
       return userData;
     }
     throw new Error('Authentication failed');
@@ -69,10 +69,10 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await api.get('/auth/me');
       if (res.data && res.data.data) {
-        const { user: userData, school, student, team, evaluator } = res.data.data;
+        const { user: userData, school, student, team, evaluator, mentor, district, jury, state_jury } = res.data.data;
         setUser(userData);
         setRole(userData.role);
-        setProfile({ school, student, team, evaluator });
+        setProfile({ school, student, team, evaluator, mentor, district, jury, state_jury });
       }
     } catch (err) {
       console.error('Failed to refresh profile:', err);

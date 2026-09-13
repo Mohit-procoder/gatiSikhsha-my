@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShieldCheck, School, GraduationCap, UserCheck, Lock, Mail, ArrowRight, KeyRound, Loader2, Sparkles } from 'lucide-react';
+import { ShieldCheck, School, GraduationCap, UserCheck, Lock, Mail, ArrowRight, KeyRound, Loader2, Sparkles, Award, MapPin, Compass } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import Navbar from '../../components/layout/Navbar';
@@ -18,14 +18,60 @@ const roleMeta = {
     redirect: '/admin/dashboard'
   },
   school: {
-    title: 'School & Mentor Portal',
-    desc: 'Register teams, mentor students & track stage milestones',
+    title: 'School & Institution Portal',
+    desc: 'Register institution, track UDISE approval & team milestones',
     icon: School,
     color: 'from-emerald-900 to-teal-950',
     accent: 'text-emerald-800 bg-emerald-100',
     demo: { email: 'school@afip.demo', pass: 'School@123' },
     redirect: '/school/dashboard',
     registerLink: '/register/school'
+  },
+  mentor: {
+    title: 'Teacher & Innovation Mentor',
+    desc: 'Guide student innovator teams, provide milestone feedback & track projects',
+    icon: Compass,
+    color: 'from-cyan-900 to-slate-950',
+    accent: 'text-cyan-800 bg-cyan-100',
+    demo: { email: 'mentor@afip.demo', pass: 'Mentor@123' },
+    redirect: '/mentor/dashboard'
+  },
+  evaluator: {
+    title: 'Technical Evaluator Panel',
+    desc: 'Review assigned student prototypes & submit official scores',
+    icon: UserCheck,
+    color: 'from-blue-900 to-slate-950',
+    accent: 'text-blue-800 bg-blue-100',
+    demo: { email: 'evaluator@afip.demo', pass: 'Evaluator@123' },
+    redirect: '/evaluator/dashboard',
+    registerLink: '/register/evaluator'
+  },
+  district: {
+    title: 'District Innovation Officer',
+    desc: 'Monitor district-wide school participation, teams & innovation metrics',
+    icon: MapPin,
+    color: 'from-teal-900 to-emerald-950',
+    accent: 'text-teal-800 bg-teal-100',
+    demo: { email: 'district@afip.demo', pass: 'District@123' },
+    redirect: '/district/dashboard'
+  },
+  jury: {
+    title: 'Zonal & Subject Jury Panel',
+    desc: 'Assess zonal hackathon teams and interview student finalists',
+    icon: Award,
+    color: 'from-indigo-900 to-slate-950',
+    accent: 'text-indigo-800 bg-indigo-100',
+    demo: { email: 'jury@afip.demo', pass: 'Jury@123' },
+    redirect: '/jury/dashboard'
+  },
+  state_jury: {
+    title: 'State Grand Jury',
+    desc: 'Evaluate top state finalists and determine government awards',
+    icon: Sparkles,
+    color: 'from-amber-950 via-slate-900 to-emerald-950',
+    accent: 'text-amber-800 bg-amber-100',
+    demo: { email: 'statejury@afip.demo', pass: 'StateJury@123' },
+    redirect: '/state-jury/dashboard'
   },
   student: {
     title: 'Student & Team Portal',
@@ -36,16 +82,6 @@ const roleMeta = {
     demo: { email: 'student@afip.demo', pass: 'Student@123' },
     redirect: '/student/dashboard',
     registerLink: '/register/student'
-  },
-  evaluator: {
-    title: 'Evaluator & Jury Panel',
-    desc: 'Review assigned student prototypes & submit official scores',
-    icon: UserCheck,
-    color: 'from-blue-900 to-slate-950',
-    accent: 'text-blue-800 bg-blue-100',
-    demo: { email: 'evaluator@afip.demo', pass: 'Evaluator@123' },
-    redirect: '/evaluator/dashboard',
-    registerLink: '/register/evaluator'
   }
 };
 
@@ -97,12 +133,16 @@ const Login = () => {
 
       <main className="flex-1 pt-32 pb-20 flex flex-col items-center justify-center px-4 sm:px-6">
         {/* Role Switcher Tabs */}
-        <div className="flex items-center gap-1.5 p-1 bg-slate-200/80 rounded-2xl mb-6 max-w-md w-full border border-slate-300/60 shadow-xs">
+        <div className="flex flex-wrap items-center justify-center gap-1.5 p-1.5 bg-slate-200/80 rounded-2xl mb-6 max-w-2xl w-full border border-slate-300/60 shadow-xs">
           {[
-            { key: 'student', label: 'Student' },
             { key: 'school', label: 'School' },
+            { key: 'admin', label: 'Admin' },
+            { key: 'mentor', label: 'Mentor' },
             { key: 'evaluator', label: 'Evaluator' },
-            { key: 'admin', label: 'Admin' }
+            { key: 'district', label: 'District' },
+            { key: 'jury', label: 'Jury' },
+            { key: 'state_jury', label: 'State Jury' },
+            { key: 'student', label: 'Student' }
           ].map((r) => (
             <button
               key={r.key}
@@ -111,9 +151,9 @@ const Login = () => {
                 setErrorMessage('');
                 navigate(`/login/${r.key}`);
               }}
-              className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
                 role === r.key
-                  ? 'bg-white text-slate-900 shadow-sm'
+                  ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-900/5'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >

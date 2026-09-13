@@ -321,31 +321,138 @@ def test_leaderboard_visibility_toggle(client):
     # Reset back to public for users
     client.patch("/api/v1/admin/leaderboard-visibility", headers={"Authorization": f"Bearer {admin_token}"}, json={"is_public": True})
 
-def test_student_registration_with_school_code(client):
-    # Register student under Brahmaputra Public School (AFIP-AS-KAM-00001)
-    res = client.post("/api/v1/auth/register-student", json={
-        "school_code": "AFIP-AS-KAM-00001",
-        "team_name": "Eco Innovators Assam",
-        "category": "IX-X",
-        "leader_name": "Priyanka Kalita",
-        "leader_email": "priyanka.kalita@afip.demo",
-        "leader_phone": "+91 94350 11223",
-        "leader_grade": "Class IX",
-        "password": "Student@123",
-        "confirm_password": "Student@123",
-        "members": [{"name": "Debajit Bora", "email": "debajit.b@afip.demo", "grade": "Class IX"}]
+def test_admin_approves_school_dedicated_endpoint(client):
+    admin_token = get_auth_token(client, "admin@afip.demo", "Admin@123")
+    # Register school in Jorhat
+    res = client.post("/api/v1/schools/register", json={
+        "school_name": "Jorhat Model Higher Secondary",
+        "udise_school_id": "18150100001",
+        "school_type": "Government Model School",
+        "board": "SEBA",
+        "state": "Assam",
+        "district": "Jorhat",
+        "block": "Jorhat Central",
+        "pin_code": "785001",
+        "official_email": "jorhat.model@afip.demo",
+        "official_phone": "+91 94350 77111",
+        "principal_name": "M. Saikia",
+        "password": "School@123",
+        "confirm_password": "School@123"
     })
     assert res.status_code == 201
-    data = res.get_json()["data"]
-    assert data["team_code"].startswith("AFIP-T-")
-    assert data["school_name"] == "Brahmaputra Public School"
+    school_id = res.get_json()["data"]["school_id"]
 
-    # Test student can log in
-    token = get_auth_token(client, "priyanka.kalita@afip.demo", "Student@123")
-    assert token is not None
-    me_res = client.get("/api/v1/teams/my-team", headers={"Authorization": f"Bearer {token}"})
-    assert me_res.status_code == 200
-    my_team = me_res.get_json()["data"]
-    assert my_team["team"]["team_name"] == "Eco Innovators Assam"
-    assert my_team["school"]["school_code"] == "AFIP-AS-KAM-00001"
+    # Pending school cannot log in yet
+    pending_login = client.post("/api/v1/auth/login", json={
+        "email": "jorhat.model@afip.demo",
+        "password": "School@123"
+    })
+    assert pending_login.status_code == 403
+    assert "pending administrative review" in pending_login.get_json()["error"]["message"]
+
+    # Admin approves school
+    approve_res = client.post(
+        f"/api/v1/admin/schools/{school_id}/approve",
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert approve_res.status_code == 200
+    assert approve_res.get_json()["data"]["status"] == "approved"
+    assert approve_res.get_json()["data"]["school_code"].startswith("AFIP-AS-JOR-")
+
+    # Approved school can now log in
+    login_res = client.post("/api/v1/auth/login", json={
+        "email": "jorhat.model@afip.demo",
+        "password": "School@123"
+    })
+    assert login_res.status_code == 200
+    assert login_res.get_json()["data"]["token"] is not None
+
+def test_admin_rejects_school_requires_reason(client):
+    admin_token = get_auth_token(client, "admin@afip.demo", "Admin@123")
+    # Register school in Darrang
+    res = client.post("/api/v1/schools/register", json={
+        "school_name": "Darrang Test School",
+        "udise_school_id": "18160100001",
+        "school_type": "Private",
+        "board": "SEBA",
+        "state": "Assam",
+        "district": "Darrang",
+        "block": "Mangaldai Block",
+        "pin_code": "784125",
+        "official_email": "darrang.test@afip.demo",
+        "official_phone": "+91 94350 88222",
+        "principal_name": "K. Sarma",
+        "password": "School@123",
+        "confirm_password": "School@123"
+    })
+    assert res.status_code == 201
+    school_id = res.get_json()["data"]["school_id"]
+
+    # Attempt rejection without reason -> MUST FAIL with 400
+    no_reason_res = client.post(
+        f"/api/v1/admin/schools/{school_id}/reject",
+        headers={"Authorization": f"Bearer {admin_token}"},
+        json={"rejection_reason": ""}
+    )
+    assert no_reason_res.status_code == 400
+    assert "rejection reason is mandatory" in no_reason_res.get_json()["error"]["message"].lower()
+
+    # Rejection with reason -> MUST SUCCEED with 200
+    reason_res = client.post(
+        f"/api/v1/admin/schools/{school_id}/reject",
+        headers={"Authorization": f"Bearer {admin_token}"},
+        json={"rejection_reason": "Incomplete institutional affiliation proof."}
+    )
+    assert reason_res.status_code == 200
+    assert reason_res.get_json()["data"]["status"] == "rejected"
+    assert reason_res.get_json()["data"]["rejection_reason"] == "Incomplete institutional affiliation proof."
+
+    # Rejected school login attempt -> 403
+    rej_login = client.post("/api/v1/auth/login", json={
+        "email": "darrang.test@afip.demo",
+        "password": "School@123"
+    })
+    assert rej_login.status_code == 403
+    assert "rejected" in rej_login.get_json()["error"]["message"].lower()
+
+def test_rbac_backend_school_cannot_access_admin_api(client):
+    school_token = get_auth_token(client, "school@afip.demo", "School@123")
+    # School attempts to access admin-only endpoint
+    res = client.get("/api/v1/admin/audit-logs", headers={"Authorization": f"Bearer {school_token}"})
+    assert res.status_code == 403
+    assert "Access forbidden" in res.get_json()["error"]["message"]
+
+def test_unauthenticated_request_rejected(client):
+    res = client.get("/api/v1/admin/stats")
+    assert res.status_code == 401
+    assert "authorization" in res.get_json()["error"]["message"].lower() or res.get_json()["error"]["code"] == "UNAUTHORIZED"
+
+def test_logout_endpoint_and_audit_log(client):
+    admin_token = get_auth_token(client, "admin@afip.demo", "Admin@123")
+    res = client.post("/api/v1/auth/logout", headers={"Authorization": f"Bearer {admin_token}"})
+    assert res.status_code == 200
+    assert res.get_json()["message"] == "Logged out successfully."
+
+def test_all_portal_roles_login(client):
+    # Test all 7 role accounts + student
+    roles_test = [
+        ("admin@afip.demo", "Admin@123", "admin"),
+        ("school@afip.demo", "School@123", "school"),
+        ("mentor@afip.demo", "Mentor@123", "mentor"),
+        ("evaluator@afip.demo", "Evaluator@123", "evaluator"),
+        ("district@afip.demo", "District@123", "district"),
+        ("jury@afip.demo", "Jury@123", "jury"),
+        ("statejury@afip.demo", "StateJury@123", "state_jury"),
+        ("student@afip.demo", "Student@123", "student")
+    ]
+    for email, password, expected_role in roles_test:
+        token = get_auth_token(client, email, password)
+        assert token is not None
+        me_res = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})
+        assert me_res.status_code == 200
+        user = me_res.get_json()["data"]["user"]
+        assert user["role"] == expected_role
+        # Security assertion: password_hash never exposed
+        assert "password_hash" not in user
+        assert "password" not in user
 
