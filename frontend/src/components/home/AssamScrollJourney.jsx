@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
-  Calendar, Award, Users, BookOpen, BrainCircuit,
-  Code2, Trophy, MapPin, Sparkles, ArrowDown
+  Calendar, CheckCircle, Award, Users, BookOpen, BrainCircuit,
+  Code2, Trophy, MapPin, Sparkles, ArrowDown, Flame
 } from 'lucide-react';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -21,38 +21,141 @@ function SchoolIcon(props) {
 // SINGLE SOURCE OF TRUTH: OFFICIAL 10-STEP SCHEDULE
 // =============================================================================
 export const STAGES = [
-  { step: '01', title: 'School Registration', date: '17th to 30th September, 2026', desc: 'Registrations for participating schools/teams.', category: 'Registration', icon: SchoolIcon, color: 'emerald', percent: 6 },
-  { step: '02', title: 'Team Orientation', date: '1st to 10th October, 2026', desc: 'Orientation of 2 hours for participating teams through SSA YouTube.', category: 'Orientation', icon: Users, color: 'teal', percent: 17 },
-  { step: '03', title: 'Self-Paced Foundation Learning', date: '10th to 22nd October, 2026', desc: 'Teams complete the self-paced Foundation Learning activities.', category: 'Foundation Learning', icon: BookOpen, color: 'cyan', percent: 28 },
-  { step: '04', title: 'MCQ Assessment', date: '23rd to 30th October, 2026', desc: 'Assessment of participating teams through MCQ.', category: 'Assessment', icon: BrainCircuit, color: 'amber', percent: 39 },
-  { step: '05', title: 'District-Level Shortlisting', date: '1st to 7th November, 2026', desc: 'Shortlisting for the District Level, with teams distributed equally by district (approximately 70 teams per district).', category: 'District Shortlisting', icon: MapPin, color: 'orange', percent: 50 },
-  { step: '06', title: 'Self-Paced Advanced Learning', date: '9th November to 6th December, 2026', desc: 'Teams complete the self-paced Advanced Learning activities.', category: 'Advanced Learning', icon: Code2, color: 'blue', percent: 61 },
-  { step: '07A', title: 'Coding Challenge Assessment', date: '14th to 19th December, 2026', desc: 'Assessment through Coding Challenge for the relevant team category.', category: 'Coding Challenge', icon: Code2, color: 'indigo', percent: 70 },
-  { step: '07B', title: 'Jury Round Shortlisting', date: '21st to 26th December, 2026', desc: 'Shortlisting for the Jury Round based on soft skills, with the Top 20 teams per district.', category: 'Jury Round', offline: true, icon: Award, color: 'purple', percent: 79 },
-  { step: '08', title: '72-Hour Hackathon', date: '4th to 8th January, 2027', desc: 'A 5-day offline activity involving assessment through the 72-Hour Hackathon.', category: 'Hackathon', offline: true, icon: Trophy, color: 'rose', percent: 89 },
-  { step: '09', title: 'Winners', date: 'Final Outcome', desc: 'Final selection of 30 winners across Assam.', category: 'Final', highlightBadge: '30 Winners', icon: Sparkles, color: 'emerald', percent: 97 }
-];
-
-// =============================================================================
-// SERPENTINE SVG PATH — Scaled up to match Journey page visual (viewBox 1200x920)
-// Row 1 left->right: 01-04  (y=100)
-// Row 2 right->left: 07B-05 (y=420)
-// Row 3 left->right: 08-09  (y=740)
-// =============================================================================
-const SERP_PATH = 'M 160,100 L 1030,100 C 1180,100 1180,420 1030,420 L 160,420 C 20,420 20,740 160,740 L 450,740';
-
-// Node coordinates matching the Journey page SVG_COORDS
-const NODE_COORDS_INIT = [
-  { x: 160,  y: 100 },
-  { x: 450,  y: 100 },
-  { x: 740,  y: 100 },
-  { x: 1030, y: 100 },
-  { x: 1030, y: 420 },
-  { x: 740,  y: 420 },
-  { x: 450,  y: 420 },
-  { x: 160,  y: 420 },
-  { x: 160,  y: 740 },
-  { x: 450,  y: 740 },
+  {
+    step: '01',
+    stageNumber: '1',
+    title: 'Registrations',
+    date: '17th to 30th September, 2026',
+    desc: 'State-wide school and student team registrations across all 33 districts of Assam. Mandatory onboarding for Classes 6–8, 9–10, and 11–12.',
+    category: 'Registration',
+    icon: SchoolIcon,
+    color: 'emerald',
+    percent: 8,
+    cohort: '70,000 Teams (23,333 / Category)',
+    stats: { c11_12: '23,333', c9_10: '23,333', c6_8: '23,333', total: '70,000' }
+  },
+  {
+    step: '02',
+    stageNumber: '2',
+    title: 'Orientation on SSA YouTube',
+    date: '1st to 10th October, 2026',
+    desc: '2-hour comprehensive digital orientation for all student teams, principals, and teacher mentors live streamed on SSA YouTube channel.',
+    category: 'Orientation',
+    icon: Users,
+    color: 'teal',
+    percent: 18,
+    cohort: '70,000 Teams (2-Hour Stream)'
+  },
+  {
+    step: '03',
+    stageNumber: '3',
+    title: 'Self-Paced Foundation Learning',
+    date: '10 – 22 October, 2026',
+    desc: 'Self-paced foundational learning modules for all registered teams covering design thinking, problem framing, and core STEM principles.',
+    category: 'Foundation Learning',
+    icon: BookOpen,
+    color: 'green',
+    percent: 28,
+    cohort: '70,000 Teams'
+  },
+  {
+    step: '04',
+    stageNumber: '4',
+    title: 'Assessment by MCQ',
+    date: '23 – 30 October, 2026',
+    desc: 'Standardized state-wide MCQ benchmark evaluating mastery of foundational learning concepts to qualify teams for district quotas.',
+    category: 'Assessment',
+    icon: BrainCircuit,
+    color: 'amber',
+    percent: 38,
+    cohort: '70,000 Teams Benchmark'
+  },
+  {
+    step: '05',
+    stageNumber: '5',
+    title: 'Shortlisting for District Level',
+    date: '1 – 7 November, 2026',
+    desc: 'Merit-based selection of top 5,000 teams equally divided across all 33 districts of Assam (~70 teams per district; 1,666 per category).',
+    category: 'District Shortlist',
+    icon: Trophy,
+    color: 'orange',
+    percent: 48,
+    cohort: '5,000 Teams (~70 / District)',
+    stats: { c11_12: '1,666', c9_10: '1,666', c6_8: '1,666', total: '5,000' }
+  },
+  {
+    step: '06',
+    stageNumber: '6',
+    title: 'Self-Paced Advance Learning',
+    date: '9 November – 6 December, 2026',
+    desc: 'Advanced specialized learning modules for the 5,000 qualifying teams with hands-on mentoring in embedded coding, IoT, robotics, and hardware prototyping.',
+    category: 'Advance Learning',
+    icon: Code2,
+    color: 'emerald',
+    percent: 58,
+    cohort: '5,000 Teams (1,666 / Category)'
+  },
+  {
+    step: '07A',
+    stageNumber: '7a',
+    title: 'Technical Challenge',
+    date: '14 – 19 December, 2026',
+    desc: 'Rigorous technical benchmark: Classes 9–12 assessed via Coding Challenge; Classes 6–8 assessed via MCQ challenge.',
+    category: 'Technical Challenge',
+    icon: Code2,
+    color: 'blue',
+    percent: 68,
+    cohort: '5,000 Teams',
+    criteria: '9–12: Coding Challenge • 6–8: MCQ'
+  },
+  {
+    step: '07B',
+    stageNumber: '7b',
+    title: 'Jury Round (Soft Skills)',
+    date: '21 – 26 December, 2026',
+    desc: 'Offline Jury evaluation focusing on soft skills and project defense. Top 20 teams selected per district (660 per category, 1,980 total).',
+    category: 'Offline Jury Round',
+    isOffline: true,
+    icon: CheckCircle,
+    color: 'teal',
+    percent: 78,
+    cohort: '1,980 Teams (Top 20 / District)',
+    stats: { c11_12: '660', c9_10: '660', c6_8: '660', total: '1,980' }
+  },
+  {
+    step: '08',
+    stageNumber: '8',
+    title: '5-Day State Hackathon',
+    date: '4 – 8 January, 2027',
+    desc: '5-day offline assessment featuring a 72-Hour live Hackathon for 150 elite teams (50 per category). Evaluation weightage: 70% Coding/MCQ + 30% Jury round.',
+    category: 'State Hackathon',
+    isOffline: true,
+    icon: Flame,
+    color: 'indigo',
+    percent: 88,
+    cohort: '150 Finalists (50 / Category)',
+    criteria: '70% Coding/MCQ + 30% Jury Weightage'
+  },
+  {
+    step: '09',
+    stageNumber: '9',
+    title: 'Grand Winners & Pathways',
+    date: 'January 2027 / By 31 Dec 2026',
+    desc: 'Top 30 state winners (10 per category) awarded championships and inducted into long-term Innovation Acceleration Pathways.',
+    category: 'Winners & Pathways',
+    icon: Award,
+    color: 'amber',
+    percent: 97,
+    cohort: '30 State Champions (10 / Category)',
+    stats: { c11_12: '10', c9_10: '10', c6_8: '10', total: '30' },
+    pathways: [
+      'R&D Publication',
+      'IP Filing (Patents & Claims)',
+      'Incubation Pitch',
+      'Grand Showcase',
+      'International Exposure (IIT Delhi by 31 Dec 2026)'
+    ]
+  }
 ];
 
 const AssamScrollJourney = () => {
@@ -60,8 +163,6 @@ const AssamScrollJourney = () => {
   const pathRef = useRef(null);
   const activeTrailRef = useRef(null);
   const boyRef = useRef(null);
-  const womanRef = useRef(null);
-  const rhinoRef = useRef(null);
   const vegSlowRef = useRef(null);
   const vegMedRef = useRef(null);
   const vegFastRef = useRef(null);
@@ -135,22 +236,16 @@ const AssamScrollJourney = () => {
           const dx = p2.x - p1.x;
           const dy = p2.y - p1.y;
 
-          // Flip horizontally when moving leftwards (Row 2)
-          const scaleFactor = 0.65;
-          const scaleX = dx < -0.1 ? -scaleFactor : scaleFactor;
-          const rawAngle = Math.atan2(dy, Math.abs(dx) || 0.001) * (180 / Math.PI);
-          const gentleAngle = Math.max(-15, Math.min(15, rawAngle * 0.3));
-
-          boyEl.setAttribute('transform',
-            `translate(${currentPoint.x},${currentPoint.y}) rotate(${gentleAngle}) scale(${scaleX},${scaleFactor})`
-          );
-
-          // Parallax for lady, rhino, vegetation
-          if (womanRef.current) gsap.set(womanRef.current, { y: (progress - 0.5) * -16, rotate: Math.sin(progress * 6) * 1.2 });
-          if (rhinoRef.current) gsap.set(rhinoRef.current, { y: (progress - 0.5) * -12, rotate: Math.cos(progress * 5) * 0.8 });
-          if (vegSlowRef.current) gsap.set(vegSlowRef.current, { y: progress * -20 });
-          if (vegMedRef.current) gsap.set(vegMedRef.current, { y: progress * -35 });
-          if (vegFastRef.current) gsap.set(vegFastRef.current, { y: progress * -50 });
+          // 3. Environmental Vegetation Multi-Depth Parallax
+          if (vegSlowRef.current) {
+            gsap.set(vegSlowRef.current, { y: progress * 120 });
+          }
+          if (vegMedRef.current) {
+            gsap.set(vegMedRef.current, { y: progress * 280 });
+          }
+          if (vegFastRef.current) {
+            gsap.set(vegFastRef.current, { y: progress * 480 });
+          }
 
           // Checkpoint: closest to current distance
           let currentIdx = 0;
@@ -198,10 +293,15 @@ const AssamScrollJourney = () => {
           </div>
         </div>
 
-        {/* ── BACKGROUND VEGETATION (Z-0) ── */}
-        <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-          <div ref={vegSlowRef} className="absolute right-0 top-10 opacity-25">
-            <svg width="500" height="300" viewBox="0 0 450 260" className="translate-x-12">
+
+
+        {/* ------------------------------------------------------------------ */}
+        {/* ZONE 3 (RIGHT): KAZIRANGA WILDLIFE OASIS — ONE-HORNED RHINOCEROS & VEGETATION */}
+        {/* ------------------------------------------------------------------ */}
+        <div className="absolute right-0 top-0 bottom-0 pointer-events-none z-10 w-full sm:w-1/2 max-w-lg select-none overflow-hidden sm:overflow-visible">
+          {/* Layer 1: Distant Misty Himalayan & Patkai Mountain Ranges */}
+          <div ref={vegSlowRef} className="absolute right-0 top-16 opacity-35 will-change-transform">
+            <svg width="450" height="260" viewBox="0 0 450 260" className="translate-x-12">
               <path d="M 0,260 L 70,110 L 150,180 L 250,70 L 370,190 L 450,130 L 450,260 Z" fill="#7ba3b8" />
               <path d="M 100,260 L 190,140 L 290,210 L 450,120 L 450,260 Z" fill="#9dbfce" opacity="0.6" />
             </svg>
@@ -226,233 +326,7 @@ const AssamScrollJourney = () => {
         {/* ── MIDDLE MAIN ROW (Lady - Serpentine Road/Card - Rhino) ── */}
         <div className="flex-1 flex flex-row items-center justify-between px-2 sm:px-4 lg:px-8 w-full max-w-[1600px] mx-auto min-h-0 relative z-20 overflow-hidden gap-1 sm:gap-3">
 
-          {/* LADY (Left) */}
-          <div ref={womanRef} className="shrink-0 w-28 sm:w-40 lg:w-52 xl:w-60 pointer-events-none select-none z-20 self-end pb-2 sm:pb-6">
-            <div className="relative">
-              <div className="absolute -inset-4 bg-emerald-500/10 blur-2xl rounded-full" />
-              <svg viewBox="0 0 300 450" className="w-full h-auto drop-shadow-2xl">
-                <defs>
-                  <linearGradient id="tea-basket" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#b45309" /><stop offset="100%" stopColor="#78350f" /></linearGradient>
-                  <linearGradient id="saree-drape" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#fdf4dc" /><stop offset="50%" stopColor="#f5e6c4" /><stop offset="100%" stopColor="#e2c892" /></linearGradient>
-                  <linearGradient id="muga-red-border" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#dc2626" /><stop offset="100%" stopColor="#991b1b" /></linearGradient>
-                </defs>
-                <g className="animate-pulse" style={{ animationDuration: '4s' }}>
-                  <ellipse cx="110" cy="180" rx="42" ry="58" fill="url(#tea-basket)" stroke="#572208" strokeWidth="3" transform="rotate(-15, 110, 180)" />
-                  <path d="M 80,140 Q 110,180 140,220 M 70,180 Q 110,190 150,180 M 80,210 Q 110,210 140,160" stroke="#fcd34d" strokeWidth="1.5" opacity="0.6" />
-                  <path d="M 75,130 Q 95,115 115,125 Q 135,110 150,135 Q 130,150 90,145 Z" fill="#2d6a4f" />
-                  <circle cx="100" cy="125" r="5" fill="#52b788" /><circle cx="125" cy="120" r="6" fill="#74c69d" /><circle cx="112" cy="132" r="4.5" fill="#40916c" />
-                  <path d="M 95,145 C 105,105 130,70 155,75" fill="none" stroke="#78350f" strokeWidth="4.5" strokeLinecap="round" />
-                </g>
-                <g>
-                  <circle cx="175" cy="72" r="18" fill="#1e1b18" /><circle cx="186" cy="65" r="4" fill="#ef4444" />
-                  <ellipse cx="160" cy="78" rx="16" ry="18" fill="#d4a373" />
-                  <path d="M 148,65 Q 165,58 178,68 Q 165,72 152,70 Z" fill="#f87171" opacity="0.9" />
-                  <rect x="156" y="94" width="10" height="12" fill="#c68a52" rx="2" />
-                  <path d="M 154,102 Q 161,107 168,102" stroke="#f59e0b" strokeWidth="2.5" fill="none" />
-                  <path d="M 140,105 Q 160,100 178,110 L 190,165 Q 160,175 135,160 Z" fill="#b91c1c" />
-                  <path d="M 142,108 Q 165,135 150,210 L 195,290 Q 210,190 180,115 Z" fill="url(#saree-drape)" stroke="#d97706" strokeWidth="1" />
-                  <path d="M 142,108 Q 165,135 150,210" stroke="url(#muga-red-border)" strokeWidth="4" fill="none" />
-                  <path d="M 150,210 L 195,290" stroke="url(#muga-red-border)" strokeWidth="4" fill="none" />
-                  <path d="M 140,200 L 130,360 Q 170,370 205,355 L 190,210 Z" fill="url(#saree-drape)" />
-                  <path d="M 130,352 Q 170,362 205,347" stroke="url(#muga-red-border)" strokeWidth="6" fill="none" />
-                  <path d="M 175,120 Q 205,150 200,185 Q 185,188 178,175" fill="none" stroke="#d4a373" strokeWidth="10" strokeLinecap="round" />
-                  <circle cx="196" cy="180" r="4" fill="#d4a373" />
-                  <path d="M 198,175 Q 210,165 215,172 Q 208,182 198,175 Z" fill="#40916c" />
-                  <path d="M 200,174 Q 206,160 212,165 Q 207,175 200,174 Z" fill="#52b788" />
-                </g>
-                <ellipse cx="160" cy="370" rx="60" ry="12" fill="#1b4332" opacity="0.4" />
-              </svg>
-              <div className="mt-1 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full border border-emerald-200/80 shadow-xs text-center">
-                <span className="text-[10px] sm:text-xs font-bold text-emerald-950">Tea Garden Heritage</span>
-              </div>
-            </div>
-          </div>
 
-          {/* ROAD + CARD (Center) */}
-          <div className="flex-1 flex flex-col items-center justify-center min-w-0 mx-auto px-0 h-full pointer-events-none">
-
-            {/* Serpentine SVG — Full Journey page scale */}
-            <div className="relative w-full flex items-center justify-center">
-              <svg
-                viewBox="0 0 1200 940"
-                className="w-full h-auto max-h-[50vh] sm:max-h-[55vh] overflow-visible"
-                aria-label="Assam Innovation Serpentine Road"
-              >
-                <defs>
-                  <linearGradient id="hp-road-base" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#f1ece4" /><stop offset="100%" stopColor="#e5ded2" /></linearGradient>
-                  <linearGradient id="hp-active-gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#059669" /><stop offset="50%" stopColor="#10b981" /><stop offset="100%" stopColor="#f59e0b" /></linearGradient>
-                  <linearGradient id="hp-boy-shirt" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#0284c7" /><stop offset="100%" stopColor="#0369a1" /></linearGradient>
-                  <linearGradient id="hp-boy-skin" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#fed7aa" /><stop offset="100%" stopColor="#f59e0b" /></linearGradient>
-                  <filter id="hp-road-shadow" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="6" stdDeviation="6" floodColor="#0f172a" floodOpacity="0.07" /></filter>
-                  <filter id="hp-active-glow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#10b981" floodOpacity="0.55" /></filter>
-                </defs>
-
-                {/* Road layers — matching Journey page stroke widths */}
-                <path d={SERP_PATH} fill="none" stroke="url(#hp-road-base)" strokeWidth="56" strokeLinecap="round" filter="url(#hp-road-shadow)" />
-                <path d={SERP_PATH} fill="none" stroke="#ffffff" strokeWidth="42" strokeLinecap="round" opacity="0.95" />
-                <path ref={pathRef} id="hp-master-path" d={SERP_PATH} fill="none" stroke="#cbd5e1" strokeWidth="5" strokeDasharray="10 8" strokeLinecap="round" />
-                <path ref={activeTrailRef} id="hp-active-trail" d={SERP_PATH} fill="none" stroke="url(#hp-active-gradient)" strokeWidth="12" strokeLinecap="round" filter="url(#hp-active-glow)" />
-
-                {/* Bend arrows */}
-                <g transform="translate(1145, 260) rotate(90)" opacity="0.6">
-                  <path d="M -6,-6 L 0,0 L 6,-6" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" />
-                  <path d="M -6,2 L 0,8 L 6,2" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" />
-                </g>
-                <g transform="translate(55, 580) rotate(90)" opacity="0.6">
-                  <path d="M -6,-6 L 0,0 L 6,-6" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" />
-                  <path d="M -6,2 L 0,8 L 6,2" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" />
-                </g>
-
-                {/* Checkpoint nodes — matching Journey page node sizes */}
-                {nodePositions.map((pos, idx) => {
-                  const isActive = activeStepIndex >= idx;
-                  const isCurrent = activeStepIndex === idx;
-                  const stepStr = STAGES[idx]?.step || String(idx + 1).padStart(2, '0');
-                  return (
-                    <g key={stepStr} className="transition-all duration-300">
-                      {isCurrent && <circle cx={pos.x} cy={pos.y} r="32" fill="#10b981" opacity="0.22" className="animate-ping" />}
-                      <circle cx={pos.x} cy={pos.y} r={isCurrent ? 24 : isActive ? 19 : 15} fill={isCurrent ? '#f59e0b' : isActive ? '#10b981' : '#94a3b8'} opacity={isCurrent ? 0.9 : isActive ? 0.75 : 0.4} />
-                      <circle cx={pos.x} cy={pos.y} r={isCurrent ? 15 : isActive ? 12 : 9} fill={isCurrent ? '#064e3b' : isActive ? '#065f46' : '#475569'} stroke="#ffffff" strokeWidth="2.5" />
-                      <text x={pos.x} y={pos.y + 4} textAnchor="middle" fill="#ffffff" fontSize={stepStr.length > 2 ? '8' : '9'} fontWeight="bold" fontFamily="sans-serif">{stepStr}</text>
-                    </g>
-                  );
-                })}
-
-                {/* Student traveler */}
-                <g ref={boyRef} id="hp-student-traveler" className="will-change-transform" style={{ transformOrigin: '0px 0px' }}>
-                  {/* Shadow */}
-                  <ellipse cx="0" cy="-2" rx="18" ry="6" fill="#0f172a" opacity="0.3" />
-                  {/* Character Body */}
-                  <g transform="translate(0, -6)">
-                    {/* Backpack */}
-                    <rect x="-18" y="-48" width="12" height="24" rx="4" fill="#f59e0b" stroke="#b45309" strokeWidth="1.5" />
-                    <path d="M -16,-42 Q -22,-30 -16,-20" stroke="#b45309" strokeWidth="2" fill="none" />
-                    {/* Legs */}
-                    <path d="M -6,-20 L -10,0" stroke="#1e293b" strokeWidth="6" strokeLinecap="round" />
-                    <path d="M 6,-20 L 10,-2" stroke="#334155" strokeWidth="6" strokeLinecap="round" />
-                    {/* Shoes */}
-                    <path d="M -14,0 L -6,0" stroke="#0f172a" strokeWidth="5" strokeLinecap="round" />
-                    <path d="M 6,-2 L 14,-2" stroke="#0f172a" strokeWidth="5" strokeLinecap="round" />
-                    {/* Torso & Uniform */}
-                    <path d="M -12,-52 L 12,-52 L 10,-20 L -10,-20 Z" fill="url(#hp-boy-shirt)" />
-                    <polygon points="0,-48 -5,-52 5,-52" fill="#ffffff" />
-                    <polygon points="-1,-48 1,-48 2,-32 0,-28 -2,-32" fill="#dc2626" />
-                    {/* Arms */}
-                    <path d="M -12,-46 Q -18,-34 -8,-28" stroke="url(#hp-boy-skin)" strokeWidth="4.5" strokeLinecap="round" fill="none" />
-                    <path d="M 12,-46 Q 18,-34 8,-28" stroke="url(#hp-boy-skin)" strokeWidth="4.5" strokeLinecap="round" fill="none" />
-                    <rect x="2" y="-34" width="12" height="15" rx="2" fill="#ffffff" stroke="#2563eb" strokeWidth="1.5" transform="rotate(12, 8, -26)" />
-                    {/* Head */}
-                    <circle cx="0" cy="-62" r="11" fill="url(#hp-boy-skin)" />
-                    <path d="M -10,-65 C -10,-76 10,-76 10,-65 C 6,-72 -6,-72 -10,-65 Z" fill="#1e1b18" />
-                    <circle cx="-3" cy="-63" r="1.5" fill="#0f172a" />
-                    <circle cx="4" cy="-63" r="1.5" fill="#0f172a" />
-                    <path d="M -2,-58 Q 0,-55 3,-58" stroke="#b45309" strokeWidth="1.2" fill="none" strokeLinecap="round" />
-                    {/* Badge */}
-                    <g transform="translate(0, -82)">
-                      <rect x="-36" y="-8" width="72" height="16" rx="8" fill="#064e3b" stroke="#10b981" strokeWidth="1.2" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.25))" />
-                      <text x="0" y="3.5" textAnchor="middle" fill="#fcd34d" fontSize="7.5" fontWeight="bold">Young Innovator</text>
-                    </g>
-                  </g>
-                </g>
-              </svg>
-            </div>
-
-            {/* Active Stage Info Card — Larger, matching Journey page card style */}
-            <div className="pointer-events-auto mt-3 sm:mt-4 w-full max-w-sm sm:max-w-md lg:max-w-lg mx-auto">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeStage.step}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.22 }}
-                  className="bg-white/95 backdrop-blur-md rounded-2xl border-2 border-emerald-600/30 shadow-lg p-4 sm:p-5"
-                >
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="w-9 h-9 rounded-xl bg-emerald-900 text-amber-300 font-black text-sm flex items-center justify-center shadow-xs shrink-0">
-                        {activeStage.step}
-                      </span>
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-100/80 text-emerald-900 border border-emerald-300/60">{activeStage.category}</span>
-                      {activeStage.offline && (
-                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-0.5">
-                          <MapPin className="w-2.5 h-2.5" />OFFLINE
-                        </span>
-                      )}
-                      {activeStage.highlightBadge && (
-                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-300 text-slate-950 flex items-center gap-0.5">
-                          <Trophy className="w-2.5 h-2.5 text-amber-700" />{activeStage.highlightBadge}
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-[10px] font-semibold text-amber-700 flex items-center gap-1 shrink-0 bg-amber-50 px-2 py-1 rounded-full border border-amber-200">
-                      <Calendar className="w-3 h-3" />
-                      {activeStage.date.split(',')[0]}
-                    </span>
-                  </div>
-                  <h3 className="text-sm sm:text-base font-black text-slate-900 leading-snug">{activeStage.title}</h3>
-                  <p className="mt-1.5 text-xs sm:text-sm text-slate-500 leading-relaxed line-clamp-2">{activeStage.desc}</p>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-
-          </div>
-
-          {/* RHINO (Right) */}
-          <div ref={rhinoRef} className="shrink-0 w-32 sm:w-48 lg:w-60 xl:w-72 pointer-events-none select-none z-20 self-end pb-2 sm:pb-6">
-            <div className="relative">
-              <svg viewBox="0 0 360 260" className="w-full h-auto drop-shadow-2xl overflow-visible">
-                <defs>
-                  <linearGradient id="rhino-body-grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#64748b" /><stop offset="40%" stopColor="#475569" /><stop offset="100%" stopColor="#334155" /></linearGradient>
-                  <linearGradient id="rhino-plate-grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#526173" /><stop offset="60%" stopColor="#3d4957" /><stop offset="100%" stopColor="#252f3d" /></linearGradient>
-                  <linearGradient id="horn-grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#1e293b" /><stop offset="50%" stopColor="#451a03" /><stop offset="100%" stopColor="#78350f" /></linearGradient>
-                  <linearGradient id="grass-grad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#74c69d" /><stop offset="100%" stopColor="#1b4332" /></linearGradient>
-                </defs>
-                <ellipse cx="180" cy="235" rx="140" ry="18" fill="#1b4332" opacity="0.35" />
-                <g>
-                  <path d="M 95,160 L 92,230 L 112,230 L 114,175 Z" fill="#2d3748" />
-                  <path d="M 235,165 L 232,230 L 250,230 L 253,175 Z" fill="#2d3748" />
-                  <path d="M 68,140 Q 55,160 58,190" stroke="#334155" strokeWidth="5" fill="none" strokeLinecap="round" />
-                  <path d="M 57,185 Q 54,198 56,204" stroke="#1e293b" strokeWidth="6" strokeLinecap="round" />
-                  <path d="M 68,135 C 65,95 110,85 170,90 C 230,80 270,95 285,125 C 295,145 285,185 270,195 C 210,205 130,205 75,180 C 65,165 67,145 68,135 Z" fill="url(#rhino-body-grad)" />
-                  <path d="M 215,90 C 205,120 205,165 220,195" stroke="#1e293b" strokeWidth="6" strokeLinecap="round" fill="none" opacity="0.85" />
-                  <path d="M 218,92 C 208,122 208,165 223,193" stroke="#94a3b8" strokeWidth="1.5" fill="none" opacity="0.5" />
-                  <path d="M 155,92 C 145,125 148,165 160,195" stroke="#1e293b" strokeWidth="5" strokeLinecap="round" fill="none" opacity="0.75" />
-                  <path d="M 105,100 C 95,130 98,160 110,185" stroke="#1e293b" strokeWidth="5" strokeLinecap="round" fill="none" opacity="0.7" />
-                  <circle cx="85" cy="120" r="2.5" fill="#1e293b" opacity="0.6" /><circle cx="95" cy="130" r="3" fill="#1e293b" opacity="0.6" />
-                  <circle cx="88" cy="142" r="2.5" fill="#1e293b" opacity="0.6" /><circle cx="102" cy="115" r="2" fill="#1e293b" opacity="0.6" />
-                  <circle cx="235" cy="115" r="2.5" fill="#1e293b" opacity="0.6" /><circle cx="245" cy="125" r="3" fill="#1e293b" opacity="0.6" /><circle cx="240" cy="138" r="2.5" fill="#1e293b" opacity="0.6" />
-                  <path d="M 255,160 L 250,235 L 272,235 L 278,170 Z" fill="url(#rhino-plate-grad)" stroke="#1e293b" strokeWidth="2" />
-                  <circle cx="254" cy="235" r="3.5" fill="#0f172a" /><circle cx="261" cy="235" r="4" fill="#0f172a" /><circle cx="268" cy="235" r="3.5" fill="#0f172a" />
-                  <path d="M 110,155 L 105,235 L 128,235 L 132,170 Z" fill="url(#rhino-plate-grad)" stroke="#1e293b" strokeWidth="2" />
-                  <circle cx="110" cy="235" r="3.5" fill="#0f172a" /><circle cx="117" cy="235" r="4" fill="#0f172a" /><circle cx="124" cy="235" r="3.5" fill="#0f172a" />
-                  <path d="M 250,110 C 275,115 295,135 305,160 C 285,180 260,175 240,165 Z" fill="url(#rhino-body-grad)" />
-                  <path d="M 260,135 Q 275,155 265,172" stroke="#1e293b" strokeWidth="4" fill="none" opacity="0.8" />
-                  <path d="M 280,120 C 310,125 335,150 345,175 C 335,190 310,195 285,180 C 275,160 270,135 280,120 Z" fill="url(#rhino-plate-grad)" stroke="#1e293b" strokeWidth="1.5" />
-                  <path d="M 336,155 C 344,140 354,115 350,96 C 342,112 334,136 322,158 Z" fill="url(#horn-grad)" stroke="#0f172a" strokeWidth="1.5" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.3))" />
-                  <circle cx="304" cy="142" r="3.5" fill="#0f172a" /><circle cx="305" cy="141" r="1" fill="#ffffff" />
-                  <path d="M 299,139 Q 305,136 310,140" stroke="#1e293b" strokeWidth="2" fill="none" />
-                  <ellipse cx="340" cy="180" rx="3" ry="4" fill="#0f172a" />
-                  <path d="M 282,115 C 285,100 295,95 298,102 C 296,112 290,118 282,115 Z" fill="#475569" stroke="#1e293b" strokeWidth="1.5" />
-                  <path d="M 286,112 C 288,103 293,101 294,106 Z" fill="#f87171" opacity="0.35" />
-                </g>
-                <g>
-                  <path d="M 80,240 Q 70,180 50,150 Q 75,190 90,240 Z" fill="url(#grass-grad)" opacity="0.9" />
-                  <path d="M 120,240 Q 135,170 155,140 Q 138,185 130,240 Z" fill="url(#grass-grad)" opacity="0.85" />
-                  <path d="M 270,240 Q 285,160 310,130 Q 288,180 280,240 Z" fill="url(#grass-grad)" opacity="0.95" />
-                  <path d="M 290,240 Q 315,170 340,145 Q 315,190 300,240 Z" fill="url(#grass-grad)" opacity="0.9" />
-                  <path d="M 220,240 Q 210,195 195,165 Q 215,200 230,240 Z" fill="#2d6a4f" opacity="0.85" />
-                  <circle cx="50" cy="148" r="3" fill="#f59e0b" opacity="0.8" /><circle cx="156" cy="138" r="3" fill="#f59e0b" opacity="0.8" /><circle cx="312" cy="128" r="3.5" fill="#f59e0b" opacity="0.8" />
-                </g>
-              </svg>
-              <div className="mt-1 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full border border-emerald-300 shadow-xs text-center">
-                <span className="text-[10px] sm:text-xs font-bold text-emerald-950 flex items-center justify-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
-                  <span>One-Horned Rhinoceros</span>
-                </span>
-              </div>
-            </div>
-          </div>
 
         </div>
 
@@ -460,7 +334,7 @@ const AssamScrollJourney = () => {
         <div className="shrink-0 pb-4 sm:pb-6 px-4 sm:px-8 z-30 flex items-center justify-between pointer-events-auto text-xs font-semibold text-slate-600">
           <div className="flex items-center gap-2 bg-white/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-200 shadow-sm">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-            <span>Checkpoint {activeStage.step} of 10: {activeStage.title}{activeStage.offline ? ' (Offline)' : ''}{activeStage.highlightBadge ? ' - ' + activeStage.highlightBadge : ''}</span>
+            <span>Stage {STAGES[activeStepIndex]?.step || String(activeStepIndex + 1).padStart(2, '0')} of 09: {STAGES[activeStepIndex]?.title}</span>
           </div>
           <div className="hidden sm:flex items-center gap-2 text-emerald-800 bg-emerald-50/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-emerald-200">
             <span>Scroll down to advance journey</span>
@@ -468,6 +342,393 @@ const AssamScrollJourney = () => {
           </div>
         </div>
 
+      {/* ==================================================================== */}
+      {/* ZONE 2 (CENTER): SCROLLING PATHWAY & MATHEMATICALLY BOUND STUDENT */}
+      {/* ==================================================================== */}
+      <div className="absolute inset-x-0 top-0 w-full h-full flex justify-center pointer-events-none z-10">
+        <svg
+          className="w-full h-full max-w-2xl overflow-visible pointer-events-none"
+          viewBox="0 0 400 6000"
+          preserveAspectRatio="none"
+        >
+          <defs>
+            {/* Illuminated active trail gradient */}
+            <linearGradient id="active-path-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#10b981" />
+              <stop offset="35%" stopColor="#059669" />
+              <stop offset="70%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </linearGradient>
+
+            <filter id="road-glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="3" stdDeviation="6" floodColor="#064e3b" floodOpacity="0.25" />
+            </filter>
+            <filter id="active-glow" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="0" stdDeviation="8" floodColor="#10b981" floodOpacity="0.6" />
+            </filter>
+
+            {/* Student Uniform Gradients */}
+            <linearGradient id="boy-shirt" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e3a8a" />
+            </linearGradient>
+            <linearGradient id="boy-skin" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="100%" stopColor="#d4a373" />
+            </linearGradient>
+          </defs>
+
+          {/* Road / trail foundation base */}
+          <path
+            d="M 200,0 
+               C 280,300 120,600 200,900
+               C 290,1200 90,1500 220,1800
+               C 320,2100 110,2400 190,2700
+               C 300,3000 80,3300 210,3600
+               C 310,3900 100,4200 200,4500
+               C 290,4800 120,5100 220,5400
+               C 300,5700 170,5900 200,6000"
+            fill="none"
+            stroke="#e5dbcc"
+            strokeWidth="52"
+            strokeLinecap="round"
+            filter="url(#road-glow)"
+          />
+
+          {/* Stepping trail inner border */}
+          <path
+            d="M 200,0 
+               C 280,300 120,600 200,900
+               C 290,1200 90,1500 220,1800
+               C 320,2100 110,2400 190,2700
+               C 300,3000 80,3300 210,3600
+               C 310,3900 100,4200 200,4500
+               C 290,4800 120,5100 220,5400
+               C 300,5700 170,5900 200,6000"
+            fill="none"
+            stroke="#ffffff"
+            strokeWidth="42"
+            strokeLinecap="round"
+            opacity="0.8"
+          />
+
+          {/* Inactive trail dash background */}
+          <path
+            ref={pathRef}
+            id="master-travel-path"
+            d="M 200,0 
+               C 280,300 120,600 200,900
+               C 290,1200 90,1500 220,1800
+               C 320,2100 110,2400 190,2700
+               C 300,3000 80,3300 210,3600
+               C 310,3900 100,4200 200,4500
+               C 290,4800 120,5100 220,5400
+               C 300,5700 170,5900 200,6000"
+            fill="none"
+            stroke="#cbd5e1"
+            strokeWidth="6"
+            strokeDasharray="12 10"
+            strokeLinecap="round"
+          />
+
+          {/* ACTIVE ILLUMINATED TRAIL: Dynamically revealed with strokeDashoffset */}
+          <path
+            ref={activeTrailRef}
+            id="active-illuminated-trail"
+            d="M 200,0 
+               C 280,300 120,600 200,900
+               C 290,1200 90,1500 220,1800
+               C 320,2100 110,2400 190,2700
+               C 300,3000 80,3300 210,3600
+               C 310,3900 100,4200 200,4500
+               C 290,4800 120,5100 220,5400
+               C 300,5700 170,5900 200,6000"
+            fill="none"
+            stroke="url(#active-path-gradient)"
+            strokeWidth="12"
+            strokeLinecap="round"
+            filter="url(#active-glow)"
+          />
+
+          {/* Milestone Checkpoint Nodes along the Path */}
+          {nodePositions.map((pos, idx) => {
+            const isActive = activeStepIndex >= idx;
+            const isCurrent = activeStepIndex === idx;
+            const stepNum = STAGES[idx]?.step || String(idx + 1).padStart(2, '0');
+            return (
+              <g key={STAGES[idx].step} className="transition-all duration-300">
+                <circle
+                  cx={pos.x}
+                  cy={pos.y}
+                  r={isCurrent ? 24 : isActive ? 20 : 14}
+                  fill={isCurrent ? '#f59e0b' : isActive ? '#10b981' : '#94a3b8'}
+                  opacity={isCurrent ? 0.45 : isActive ? 0.35 : 0.2}
+                />
+                <circle
+                  cx={pos.x}
+                  cy={pos.y}
+                  r={isCurrent ? 15 : isActive ? 13 : 9}
+                  fill={isCurrent ? '#064e3b' : isActive ? '#1b4332' : '#64748b'}
+                  stroke={isCurrent ? '#f59e0b' : '#ffffff'}
+                  strokeWidth="3"
+                />
+                <text
+                  x={pos.x}
+                  y={pos.y + 3.5}
+                  textAnchor="middle"
+                  fill="#ffffff"
+                  fontSize="9"
+                  fontWeight="bold"
+                >
+                  {stepNum}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* ================================================================ */}
+          {/* THE STUDENT TRAVELER (Directly inside SVG coordinate system)       */}
+          {/* Guarantees 100% mathematical synchronization with road progression */}
+          {/* ================================================================ */}
+          <g
+            ref={boyRef}
+            id="student-traveler-group"
+            className="will-change-transform"
+            style={{ transformOrigin: '0px 0px' }}
+          >
+            {/* Trail shadow right on road surface */}
+            <ellipse cx="0" cy="-2" rx="16" ry="5" fill="#0f172a" opacity="0.35" />
+
+            {/* School student character scaled to road proportions */}
+            <g transform="translate(0, -6) scale(0.65)">
+              {/* Backpack on student's back */}
+              <rect x="-18" y="-48" width="12" height="24" rx="4" fill="#f59e0b" stroke="#b45309" strokeWidth="1.5" />
+              <path d="M -16,-42 Q -22,-30 -16,-20" stroke="#b45309" strokeWidth="2" fill="none" />
+
+              {/* Legs in dynamic walking stride */}
+              <path d="M -6,-20 L -10,0" stroke="#1e293b" strokeWidth="6" strokeLinecap="round" />
+              <path d="M 6,-20 L 10,-2" stroke="#334155" strokeWidth="6" strokeLinecap="round" />
+              {/* Shoes */}
+              <path d="M -14,0 L -6,0" stroke="#0f172a" strokeWidth="5" strokeLinecap="round" />
+              <path d="M 6,-2 L 14,-2" stroke="#0f172a" strokeWidth="5" strokeLinecap="round" />
+
+              {/* Torso & School Uniform */}
+              <path d="M -12,-52 L 12,-52 L 10,-20 L -10,-20 Z" fill="url(#boy-shirt)" rx="3" />
+              <polygon points="0,-48 -5,-52 5,-52" fill="#ffffff" />
+              <polygon points="-1,-48 1,-48 2,-32 0,-28 -2,-32" fill="#dc2626" />
+
+              {/* Arms (holding prototype tablet) */}
+              <path d="M -12,-46 Q -18,-34 -8,-28" stroke="url(#boy-skin)" strokeWidth="4.5" strokeLinecap="round" fill="none" />
+              <path d="M 12,-46 Q 18,-34 8,-28" stroke="url(#boy-skin)" strokeWidth="4.5" strokeLinecap="round" fill="none" />
+              <rect x="2" y="-34" width="12" height="15" rx="2" fill="#ffffff" stroke="#2563eb" strokeWidth="1.5" transform="rotate(12, 8, -26)" />
+
+              {/* Head & Smart Hairstyle */}
+              <circle cx="0" cy="-62" r="11" fill="url(#boy-skin)" />
+              <path d="M -10,-65 C -10,-76 10,-76 10,-65 C 6,-72 -6,-72 -10,-65 Z" fill="#1e1b18" />
+              {/* Eyes & Cheerful Smile */}
+              <circle cx="-3" cy="-63" r="1.5" fill="#0f172a" />
+              <circle cx="4" cy="-63" r="1.5" fill="#0f172a" />
+              <path d="M -2,-58 Q 0,-55 3,-58" stroke="#b45309" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+
+              {/* Floating Young Innovator Badge */}
+              <g transform="translate(0, -82)">
+                <rect x="-34" y="-8" width="68" height="15" rx="7.5" fill="#064e3b" stroke="#10b981" strokeWidth="1" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.25))" />
+                <text x="0" y="3" textAnchor="middle" fill="#fcd34d" fontSize="7.5" fontWeight="bold">
+                  Young Innovator
+                </text>
+              </g>
+            </g>
+          </g>
+        </svg>
+      </div>
+
+      {/* ==================================================================== */}
+      {/* 12 TIMELINE CHECKPOINT INFORMATION CARDS (Positioned along road)     */}
+      {/* ==================================================================== */}
+      <div className="absolute inset-0 w-full pointer-events-none z-30">
+        <div className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 h-full">
+          {STAGES.map((stage, idx) => {
+            const isLeft = idx % 2 === 0;
+            const isActive = activeStepIndex >= idx;
+            const isCurrent = activeStepIndex === idx;
+            const pos = nodePositions[idx] || { y: (stage.percent / 100) * 6000 };
+            const topPercent = (pos.y / 6000) * 100;
+
+            return (
+              <div
+                key={stage.step}
+                className="absolute left-4 right-4 sm:left-6 sm:right-6 flex items-center justify-between"
+                style={{
+                  top: `${topPercent}%`,
+                  transform: idx === 0 ? 'translateY(-20%)' : 'translateY(-50%)'
+                }}
+              >
+                {/* Left Side Slot */}
+                <div
+                  className={`w-full sm:w-5/12 ${isLeft ? 'block' : 'hidden sm:block sm:invisible'} ${stage.step === '01' ? 'sm:translate-x-8 lg:translate-x-12' : ''
+                    }`}
+                >
+                  {isLeft && (
+                    <motion.div
+                      initial={{ opacity: 1, x: 0 }}
+                      animate={{
+                        opacity: 1,
+                        x: 0,
+                        scale: isCurrent ? 1.03 : 1
+                      }}
+                      transition={{ duration: 0.2 }}
+                      className={`pointer-events-auto p-5 sm:p-6 rounded-3xl border transition-all ${isCurrent
+                        ? 'glass-card border-emerald-500 shadow-2xl shadow-emerald-950/15 ring-2 ring-emerald-500/30 bg-white'
+                        : 'bg-white border-slate-200/90 shadow-md'
+                        }`}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl font-black text-emerald-800 tracking-tight">
+                            {stage.step}
+                          </span>
+                          {stage.isOffline && (
+                            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-300">
+                              Offline
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-100/80 text-emerald-900 border border-emerald-300/60">
+                          {stage.category}
+                        </span>
+                      </div>
+
+                      <h3 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">
+                        {stage.title}
+                      </h3>
+
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
+                        <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-700">
+                          <Calendar className="w-3.5 h-3.5" />
+                          <span>{stage.date}</span>
+                        </div>
+                        {stage.cohort && (
+                          <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                            {stage.cohort}
+                          </span>
+                        )}
+                      </div>
+
+                      {stage.criteria && (
+                        <div className="mt-2 text-[11px] font-semibold text-blue-800 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200">
+                          {stage.criteria}
+                        </div>
+                      )}
+
+                      <p className="mt-2.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                        {stage.desc}
+                      </p>
+
+                      {stage.pathways && (
+                        <div className="mt-3 pt-3 border-t border-slate-100">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 block mb-1.5">
+                            Post-Championship Pathways:
+                          </span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {stage.pathways.map((p) => (
+                              <span key={p} className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-amber-100/90 text-amber-950 border border-amber-300/80">
+                                {p}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Center Spacer for Pathway */}
+                <div className="hidden sm:block w-2/12" />
+
+                {/* Right Side Slot */}
+                <div
+                  className={`w-full sm:w-5/12 ${!isLeft ? 'block' : 'hidden sm:block sm:invisible'} ${stage.step === '04' || stage.step === '09'
+                    ? 'sm:translate-x-10 lg:translate-x-14'
+                    : ''
+                    }`}
+                >
+                  {!isLeft && (
+                    <motion.div
+                      initial={{ opacity: 1, x: 0 }}
+                      animate={{
+                        opacity: 1,
+                        x: 0,
+                        scale: isCurrent ? 1.03 : 1
+                      }}
+                      transition={{ duration: 0.2 }}
+                      className={`pointer-events-auto p-5 sm:p-6 rounded-3xl border transition-all ${isCurrent
+                        ? 'glass-card border-amber-500 shadow-2xl shadow-amber-950/15 ring-2 ring-amber-500/30 bg-white'
+                        : 'bg-white border-slate-200/90 shadow-md'
+                        }`}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl font-black text-amber-800 tracking-tight">
+                            {stage.step}
+                          </span>
+                          {stage.isOffline && (
+                            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-300">
+                              Offline
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-100/80 text-amber-900 border border-amber-300/60">
+                          {stage.category}
+                        </span>
+                      </div>
+
+                      <h3 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">
+                        {stage.title}
+                      </h3>
+
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
+                        <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+                          <Calendar className="w-3.5 h-3.5" />
+                          <span>{stage.date}</span>
+                        </div>
+                        {stage.cohort && (
+                          <span className="text-[10px] font-bold text-amber-900 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                            {stage.cohort}
+                          </span>
+                        )}
+                      </div>
+
+                      {stage.criteria && (
+                        <div className="mt-2 text-[11px] font-semibold text-blue-800 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200">
+                          {stage.criteria}
+                        </div>
+                      )}
+
+                      <p className="mt-2.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                        {stage.desc}
+                      </p>
+
+                      {stage.pathways && (
+                        <div className="mt-3 pt-3 border-t border-slate-100">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 block mb-1.5">
+                            Post-Championship Pathways:
+                          </span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {stage.pathways.map((p) => (
+                              <span key={p} className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-amber-100/90 text-amber-950 border border-amber-300/80">
+                                {p}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
