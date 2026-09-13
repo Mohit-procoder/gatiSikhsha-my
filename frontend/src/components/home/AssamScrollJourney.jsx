@@ -4,7 +4,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
   Calendar, CheckCircle, Award, Users, BookOpen, BrainCircuit,
-  Code2, Trophy, MapPin, Sparkles, ArrowDown
+  Code2, Trophy, MapPin, Sparkles, ArrowDown, Flame
 } from 'lucide-react';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -21,123 +21,138 @@ function SchoolIcon(props) {
 export const STAGES = [
   {
     step: '01',
-    title: 'School Registration',
-    date: '20–30 September 2026',
-    desc: 'Schools across all 33 districts of Assam register with their mandatory 11-digit UDISE ID and receive portal access.',
+    stageNumber: '1',
+    title: 'Registrations',
+    date: '17th to 30th September, 2026',
+    desc: 'State-wide school and student team registrations across all 33 districts of Assam. Mandatory onboarding for Classes 6–8, 9–10, and 11–12.',
     category: 'Registration',
     icon: SchoolIcon,
     color: 'emerald',
-    percent: 8.5
+    percent: 8,
+    cohort: '70,000 Teams (23,333 / Category)',
+    stats: { c11_12: '23,333', c9_10: '23,333', c6_8: '23,333', total: '70,000' }
   },
   {
     step: '02',
-    title: 'Principal & Mentor Digital Onboarding',
-    date: '1–5 October 2026',
-    desc: '5-day comprehensive digital onboarding providing school leadership and teacher coordinators with orientation and resources.',
+    stageNumber: '2',
+    title: 'Orientation on SSA YouTube',
+    date: '1st to 10th October, 2026',
+    desc: '2-hour comprehensive digital orientation for all student teams, principals, and teacher mentors live streamed on Samagra Shiksha Assam YouTube channel.',
     category: 'Orientation',
     icon: Users,
     color: 'teal',
-    percent: 14
+    percent: 18,
+    cohort: '70,000 Teams (2-Hour Stream)'
   },
   {
     step: '03',
-    title: 'Team Formation',
-    date: '6–12 October 2026',
-    desc: 'Schools facilitate student team formation across three official categories: VI–VIII, IX–X, and XI–XII.',
-    category: 'Teams',
-    icon: Users,
+    stageNumber: '3',
+    title: 'Self-Paced Foundation Learning',
+    date: '10 – 22 October, 2026',
+    desc: 'Self-paced foundational learning modules for all registered teams covering design thinking, problem framing, and core STEM principles.',
+    category: 'Foundation Learning',
+    icon: BookOpen,
     color: 'green',
-    percent: 22
+    percent: 28,
+    cohort: '70,000 Teams'
   },
   {
     step: '04',
-    title: '20-Hour Online Bootcamp',
-    date: '13–27 October 2026',
-    desc: '15-day foundational learning program encompassing 20 structured hours in design thinking, problem framing, and technology fundamentals.',
-    category: 'Learning',
-    icon: BookOpen,
+    stageNumber: '4',
+    title: 'Assessment by MCQ',
+    date: '23 – 30 October, 2026',
+    desc: 'Standardized state-wide MCQ benchmark evaluating mastery of foundational learning concepts to qualify teams for district quotas.',
+    category: 'Assessment',
+    icon: BrainCircuit,
     color: 'amber',
-    percent: 31
+    percent: 38,
+    cohort: '70,000 Teams Benchmark'
   },
   {
     step: '05',
-    title: 'MCQ / Knowledge Assessment',
-    date: '28–30 October 2026',
-    desc: 'State-wide standardized online assessment testing concepts mastered during the bootcamp to shortlist high-performing student teams.',
-    category: 'Assessment',
-    icon: BrainCircuit,
+    stageNumber: '5',
+    title: 'Shortlisting for District Level',
+    date: '1 – 7 November, 2026',
+    desc: 'Merit-based selection of top 5,000 teams equally divided across all 33 districts of Assam (~70 teams per district; 1,666 per category).',
+    category: 'District Shortlist',
+    icon: Trophy,
     color: 'orange',
-    percent: 40
+    percent: 48,
+    cohort: '5,000 Teams (~70 / District)',
+    stats: { c11_12: '1,666', c9_10: '1,666', c6_8: '1,666', total: '5,000' }
   },
   {
     step: '06',
-    title: 'Top 1,000 Teams Shortlisted',
-    date: '31 October 2026',
-    desc: '1,000 high-potential teams across Assam qualify for the specialized advanced acceleration phase based on assessment merit.',
-    category: 'Milestone',
-    icon: Trophy,
-    color: 'amber',
-    percent: 49
-  },
-  {
-    step: '07',
-    title: '30-Day Advanced Level Bootcamp',
-    date: '1–25 November 2026',
-    desc: 'Intensive immersion across cohorts of 1,000 teams with dedicated IIT & industry mentors focusing on coding and prototyping.',
-    category: 'Advanced Learning',
+    stageNumber: '6',
+    title: 'Self-Paced Advance Learning',
+    date: '9 November – 6 December, 2026',
+    desc: 'Advanced specialized learning modules for the 5,000 qualifying teams with hands-on mentoring in embedded coding, IoT, robotics, and hardware prototyping.',
+    category: 'Advance Learning',
     icon: Code2,
     color: 'emerald',
-    percent: 58
+    percent: 58,
+    cohort: '5,000 Teams (1,666 / Category)'
+  },
+  {
+    step: '07A',
+    stageNumber: '7a',
+    title: 'Technical Challenge',
+    date: '14 – 19 December, 2026',
+    desc: 'Rigorous technical benchmark: Classes 9–12 assessed via Coding Challenge; Classes 6–8 assessed via MCQ challenge.',
+    category: 'Technical Challenge',
+    icon: Code2,
+    color: 'blue',
+    percent: 68,
+    cohort: '5,000 Teams',
+    criteria: '9–12: Coding Challenge • 6–8: MCQ'
+  },
+  {
+    step: '07B',
+    stageNumber: '7b',
+    title: 'Jury Round (Soft Skills)',
+    date: '21 – 26 December, 2026',
+    desc: 'Offline Jury evaluation focusing on soft skills and project defense. Top 20 teams selected per district (660 per category, 1,980 total).',
+    category: 'Offline Jury Round',
+    isOffline: true,
+    icon: CheckCircle,
+    color: 'teal',
+    percent: 78,
+    cohort: '1,980 Teams (Top 20 / District)',
+    stats: { c11_12: '660', c9_10: '660', c6_8: '660', total: '1,980' }
   },
   {
     step: '08',
-    title: 'Coding / Technical Challenge',
-    date: '20–25 November 2026',
-    desc: 'Teams apply hands-on skills in a rigorous technical benchmark evaluating solution functionality and software implementation.',
-    category: 'Challenge',
-    icon: Code2,
-    color: 'blue',
-    percent: 67
+    stageNumber: '8',
+    title: '5-Day State Hackathon',
+    date: '4 – 8 January, 2027',
+    desc: '5-day offline assessment featuring a 72-Hour live Hackathon for 150 elite teams (50 per category). Evaluation weightage: 70% Coding/MCQ + 30% Jury round.',
+    category: 'State Hackathon',
+    isOffline: true,
+    icon: Flame,
+    color: 'indigo',
+    percent: 88,
+    cohort: '150 Finalists (50 / Category)',
+    criteria: '70% Coding/MCQ + 30% Jury Weightage'
   },
   {
     step: '09',
-    title: 'Shortlisting of 198 Teams',
-    date: '26 Nov – 5 Dec 2026',
-    desc: 'Merit-based zonal selection yielding exactly 198 teams: 33 districts × 3 age categories × 2 top performing teams.',
-    category: 'Shortlist',
-    icon: CheckCircle,
-    color: 'teal',
-    percent: 76
-  },
-  {
-    step: '10',
-    title: 'Zonal / Divisional 48h Hackathons',
-    date: '6–20 December 2026',
-    desc: '198 teams compete across divisional venues in a 48-hour live building sprint with expert on-ground mentoring and jury evaluation.',
-    category: 'Hackathon',
-    icon: MapPin,
-    color: 'indigo',
-    percent: 85
-  },
-  {
-    step: '11',
-    title: 'Finalist Selection & Preparation',
-    date: '21 Dec 2026 – 5 Jan 2027',
-    desc: 'Consolidation of zonal results to select the top 60 State Finalists (20 per category), backed by pitch polish and prototype refinement.',
-    category: 'Preparation',
-    icon: Sparkles,
-    color: 'purple',
-    percent: 93
-  },
-  {
-    step: '12',
-    title: 'State-Level Grand Final',
-    date: 'January 2027',
-    desc: '60 finalist teams present live working demonstrations before state dignitaries, academic leaders, and industry panels. State champions awarded.',
-    category: 'Grand Finale',
+    stageNumber: '9',
+    title: 'Grand Winners & Pathways',
+    date: 'January 2027 / By 31 Dec 2026',
+    desc: 'Top 30 state winners (10 per category) awarded championships and inducted into long-term Innovation Acceleration Pathways.',
+    category: 'Winners & Pathways',
     icon: Award,
     color: 'amber',
-    percent: 98
+    percent: 97,
+    cohort: '30 State Champions (10 / Category)',
+    stats: { c11_12: '10', c9_10: '10', c6_8: '10', total: '30' },
+    pathways: [
+      'R&D Publication',
+      'IP Filing (Patents & Claims)',
+      'Incubation Pitch',
+      'Grand Showcase',
+      'International Exposure (IIT Delhi by 31 Dec 2026)'
+    ]
   }
 ];
 
@@ -146,8 +161,6 @@ const AssamScrollJourney = () => {
   const pathRef = useRef(null);
   const activeTrailRef = useRef(null);
   const boyRef = useRef(null);
-  const womanRef = useRef(null);
-  const rhinoRef = useRef(null);
   const vegSlowRef = useRef(null);
   const vegMedRef = useRef(null);
   const vegFastRef = useRef(null);
@@ -236,23 +249,7 @@ const AssamScrollJourney = () => {
             `translate(${currentPoint.x}, ${currentPoint.y}) rotate(${gentleAngle})`
           );
 
-          // 3. Left Zone: Tea Garden Worker subtle parallax sway
-          if (womanRef.current) {
-            gsap.set(womanRef.current, {
-              y: progress * 300,
-              rotate: Math.sin(progress * 12) * 1.2
-            });
-          }
-
-          // 4. Right Zone: One-Horned Rhinoceros subtle breathing & elevation drift
-          if (rhinoRef.current) {
-            gsap.set(rhinoRef.current, {
-              y: progress * 240,
-              rotate: Math.cos(progress * 8) * 0.8
-            });
-          }
-
-          // 5. Environmental Vegetation Multi-Depth Parallax
+          // 3. Environmental Vegetation Multi-Depth Parallax
           if (vegSlowRef.current) {
             gsap.set(vegSlowRef.current, { y: progress * 120 });
           }
@@ -314,71 +311,7 @@ const AssamScrollJourney = () => {
           </div>
         </div>
 
-        {/* ------------------------------------------------------------------ */}
-        {/* ZONE 1 (LEFT): TASTEFUL ASSAMESE TEA GARDEN WORKER */}
-        {/* ------------------------------------------------------------------ */}
-        <div
-          ref={womanRef}
-          className="absolute left-2 sm:left-4 lg:left-6 bottom-10 sm:bottom-14 z-20 w-36 sm:w-44 lg:w-48 pointer-events-none select-none transition-transform"
-        >
-          <div className="relative">
-            <div className="absolute -inset-4 bg-emerald-500/10 blur-2xl rounded-full" />
 
-            <svg viewBox="0 0 300 450" className="w-full h-auto drop-shadow-2xl">
-              <defs>
-                <linearGradient id="tea-basket" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#b45309" />
-                  <stop offset="100%" stopColor="#78350f" />
-                </linearGradient>
-                <linearGradient id="saree-drape" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#fdf4dc" />
-                  <stop offset="50%" stopColor="#f5e6c4" />
-                  <stop offset="100%" stopColor="#e2c892" />
-                </linearGradient>
-                <linearGradient id="muga-red-border" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#dc2626" />
-                  <stop offset="100%" stopColor="#991b1b" />
-                </linearGradient>
-              </defs>
-
-              {/* Basket on her back (Tokari / Dala) */}
-              <g id="tea-basket-group" className="animate-pulse" style={{ animationDuration: '4s' }}>
-                <ellipse cx="110" cy="180" rx="42" ry="58" fill="url(#tea-basket)" stroke="#572208" strokeWidth="3" transform="rotate(-15, 110, 180)" />
-                <path d="M 80,140 Q 110,180 140,220 M 70,180 Q 110,190 150,180 M 80,210 Q 110,210 140,160" stroke="#fcd34d" strokeWidth="1.5" opacity="0.6" />
-                <path d="M 75,130 Q 95,115 115,125 Q 135,110 150,135 Q 130,150 90,145 Z" fill="#2d6a4f" />
-                <circle cx="100" cy="125" r="5" fill="#52b788" />
-                <circle cx="125" cy="120" r="6" fill="#74c69d" />
-                <circle cx="112" cy="132" r="4.5" fill="#40916c" />
-                <path d="M 95,145 C 105,105 130,70 155,75" fill="none" stroke="#78350f" strokeWidth="4.5" strokeLinecap="round" />
-              </g>
-
-              {/* Woman Character in Mekhela Sador */}
-              <g id="woman-body">
-                <circle cx="175" cy="72" r="18" fill="#1e1b18" />
-                <circle cx="186" cy="65" r="4" fill="#ef4444" />
-                <ellipse cx="160" cy="78" rx="16" ry="18" fill="#d4a373" />
-                <path d="M 148,65 Q 165,58 178,68 Q 165,72 152,70 Z" fill="#f87171" opacity="0.9" />
-                <rect x="156" y="94" width="10" height="12" fill="#c68a52" rx="2" />
-                <path d="M 154,102 Q 161,107 168,102" stroke="#f59e0b" strokeWidth="2.5" fill="none" />
-                <path d="M 140,105 Q 160,100 178,110 L 190,165 Q 160,175 135,160 Z" fill="#b91c1c" />
-                <path d="M 142,108 Q 165,135 150,210 L 195,290 Q 210,190 180,115 Z" fill="url(#saree-drape)" stroke="#d97706" strokeWidth="1" />
-                <path d="M 142,108 Q 165,135 150,210" stroke="url(#muga-red-border)" strokeWidth="4" fill="none" />
-                <path d="M 150,210 L 195,290" stroke="url(#muga-red-border)" strokeWidth="4" fill="none" />
-                <path d="M 140,200 L 130,360 Q 170,370 205,355 L 190,210 Z" fill="url(#saree-drape)" />
-                <path d="M 130,352 Q 170,362 205,347" stroke="url(#muga-red-border)" strokeWidth="6" fill="none" />
-                <path d="M 175,120 Q 205,150 200,185 Q 185,188 178,175" fill="none" stroke="#d4a373" strokeWidth="10" strokeLinecap="round" />
-                <circle cx="196" cy="180" r="4" fill="#d4a373" />
-                <path d="M 198,175 Q 210,165 215,172 Q 208,182 198,175 Z" fill="#40916c" />
-                <path d="M 200,174 Q 206,160 212,165 Q 207,175 200,174 Z" fill="#52b788" />
-              </g>
-              <ellipse cx="160" cy="370" rx="60" ry="12" fill="#1b4332" opacity="0.4" />
-            </svg>
-
-            <div className="mt-2 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full border border-emerald-200/80 shadow-xs text-center">
-              <span className="text-[10px] font-bold text-emerald-950">Tea Garden Heritage of Assam</span>
-            </div>
-          </div>
-        </div>
 
         {/* ------------------------------------------------------------------ */}
         {/* ZONE 3 (RIGHT): KAZIRANGA WILDLIFE OASIS — ONE-HORNED RHINOCEROS & VEGETATION */}
@@ -403,179 +336,7 @@ const AssamScrollJourney = () => {
             </svg>
           </div>
 
-          {/* Layer 3: AUTHENTIC ONE-HORNED INDIAN RHINOCEROS (Rhinoceros unicornis) */}
-          <div
-            ref={rhinoRef}
-            className="absolute right-4 sm:right-10 bottom-24 z-20 w-52 sm:w-72 lg:w-80 pointer-events-none select-none transition-transform"
-          >
-            <div className="relative">
-              {/* Natural Kaziranga Sanctuary Vector Graphic */}
-              <svg viewBox="0 0 360 260" className="w-full h-auto drop-shadow-2xl overflow-visible">
-                <defs>
-                  <linearGradient id="rhino-body-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#64748b" />
-                    <stop offset="40%" stopColor="#475569" />
-                    <stop offset="100%" stopColor="#334155" />
-                  </linearGradient>
-                  <linearGradient id="rhino-plate-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#526173" />
-                    <stop offset="60%" stopColor="#3d4957" />
-                    <stop offset="100%" stopColor="#252f3d" />
-                  </linearGradient>
-                  <linearGradient id="horn-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#1e293b" />
-                    <stop offset="50%" stopColor="#451a03" />
-                    <stop offset="100%" stopColor="#78350f" />
-                  </linearGradient>
-                  <linearGradient id="grass-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#74c69d" />
-                    <stop offset="100%" stopColor="#1b4332" />
-                  </linearGradient>
-                </defs>
 
-                {/* Ground river turf & mud shadow */}
-                <ellipse cx="180" cy="235" rx="140" ry="18" fill="#1b4332" opacity="0.35" />
-
-                {/* THE ONE-HORNED RHINOCEROS GROUP with gentle idle breathing animation */}
-                <g id="rhino-character" className="origin-bottom">
-                  {/* Back legs (Far side) */}
-                  <path d="M 95,160 L 92,230 L 112,230 L 114,175 Z" fill="#2d3748" />
-                  <path d="M 235,165 L 232,230 L 250,230 L 253,175 Z" fill="#2d3748" />
-
-                  {/* Tail with tuft of hair */}
-                  <path d="M 68,140 Q 55,160 58,190" stroke="#334155" strokeWidth="5" fill="none" strokeLinecap="round" />
-                  <path d="M 57,185 Q 54,198 56,204" stroke="#1e293b" strokeWidth="6" strokeLinecap="round" />
-
-                  {/* Massive Quadruped Torso & Pelvic Armor Shield */}
-                  <path
-                    d="M 68,135 C 65,95 110,85 170,90 C 230,80 270,95 285,125 C 295,145 285,185 270,195 C 210,205 130,205 75,180 C 65,165 67,145 68,135 Z"
-                    fill="url(#rhino-body-grad)"
-                  />
-
-                  {/* Prominent Characteristic Indian Rhino Armor Skin Folds & Plates */}
-                  {/* Scapular / Shoulder Fold (deep groove) */}
-                  <path
-                    d="M 215,90 C 205,120 205,165 220,195"
-                    stroke="#1e293b"
-                    strokeWidth="6"
-                    strokeLinecap="round"
-                    fill="none"
-                    opacity="0.85"
-                  />
-                  <path
-                    d="M 218,92 C 208,122 208,165 223,193"
-                    stroke="#94a3b8"
-                    strokeWidth="1.5"
-                    fill="none"
-                    opacity="0.5"
-                  />
-
-                  {/* Flank / Rib Armor Pleat */}
-                  <path
-                    d="M 155,92 C 145,125 148,165 160,195"
-                    stroke="#1e293b"
-                    strokeWidth="5"
-                    strokeLinecap="round"
-                    fill="none"
-                    opacity="0.75"
-                  />
-
-                  {/* Pelvic / Rump Fold */}
-                  <path
-                    d="M 105,100 C 95,130 98,160 110,185"
-                    stroke="#1e293b"
-                    strokeWidth="5"
-                    strokeLinecap="round"
-                    fill="none"
-                    opacity="0.7"
-                  />
-
-                  {/* Studded Skin Tubercles (Characteristic bumpy armor texture) */}
-                  <circle cx="85" cy="120" r="2.5" fill="#1e293b" opacity="0.6" />
-                  <circle cx="95" cy="130" r="3" fill="#1e293b" opacity="0.6" />
-                  <circle cx="88" cy="142" r="2.5" fill="#1e293b" opacity="0.6" />
-                  <circle cx="102" cy="115" r="2" fill="#1e293b" opacity="0.6" />
-                  <circle cx="235" cy="115" r="2.5" fill="#1e293b" opacity="0.6" />
-                  <circle cx="245" cy="125" r="3" fill="#1e293b" opacity="0.6" />
-                  <circle cx="240" cy="138" r="2.5" fill="#1e293b" opacity="0.6" />
-
-                  {/* Front Legs (Near side) - Sturdy columnar legs with 3-toed hooves */}
-                  <path d="M 255,160 L 250,235 L 272,235 L 278,170 Z" fill="url(#rhino-plate-grad)" stroke="#1e293b" strokeWidth="2" />
-                  {/* Three distinct rounded toe hooves */}
-                  <circle cx="254" cy="235" r="3.5" fill="#0f172a" />
-                  <circle cx="261" cy="235" r="4" fill="#0f172a" />
-                  <circle cx="268" cy="235" r="3.5" fill="#0f172a" />
-
-                  {/* Hind Legs (Near side) */}
-                  <path d="M 110,155 L 105,235 L 128,235 L 132,170 Z" fill="url(#rhino-plate-grad)" stroke="#1e293b" strokeWidth="2" />
-                  <circle cx="110" cy="235" r="3.5" fill="#0f172a" />
-                  <circle cx="117" cy="235" r="4" fill="#0f172a" />
-                  <circle cx="124" cy="235" r="3.5" fill="#0f172a" />
-
-                  {/* RHINO HEAD & NECK - Angled naturally in grazing posture */}
-                  <g id="rhino-head">
-                    {/* Thick muscular neck with deep skin throat folds */}
-                    <path d="M 250,110 C 275,115 295,135 305,160 C 285,180 260,175 240,165 Z" fill="url(#rhino-body-grad)" />
-                    <path d="M 260,135 Q 275,155 265,172" stroke="#1e293b" strokeWidth="4" fill="none" opacity="0.8" />
-
-                    {/* Massive Head Silhouette */}
-                    <path
-                      d="M 280,120 C 310,125 335,150 345,175 C 335,190 310,195 285,180 C 275,160 270,135 280,120 Z"
-                      fill="url(#rhino-plate-grad)"
-                      stroke="#1e293b"
-                      strokeWidth="1.5"
-                    />
-
-                    {/* THE PROMINENT SINGLE BLACK HORN (Rhinoceros unicornis identifier) */}
-                    <path
-                      d="M 336,155 C 344,140 354,115 350,96 C 342,112 334,136 322,158 Z"
-                      fill="url(#horn-grad)"
-                      stroke="#0f172a"
-                      strokeWidth="1.5"
-                      filter="drop-shadow(0 2px 4px rgba(0,0,0,0.3))"
-                    />
-
-                    {/* Small keen eye with dark fold */}
-                    <circle cx="304" cy="142" r="3.5" fill="#0f172a" />
-                    <circle cx="305" cy="141" r="1" fill="#ffffff" />
-                    <path d="M 299,139 Q 305,136 310,140" stroke="#1e293b" strokeWidth="2" fill="none" />
-
-                    {/* Nostril & prehensile upper lip for grazing */}
-                    <ellipse cx="340" cy="180" rx="3" ry="4" fill="#0f172a" />
-
-                    {/* Fringed, tubular twitching ear */}
-                    <g id="rhino-ear">
-                      <path d="M 282,115 C 285,100 295,95 298,102 C 296,112 290,118 282,115 Z" fill="#475569" stroke="#1e293b" strokeWidth="1.5" />
-                      <path d="M 286,112 C 288,103 293,101 294,106 Z" fill="#f87171" opacity="0.35" />
-                    </g>
-                  </g>
-                </g>
-
-                {/* Lush Assam Riverine Elephant Grass & Reeds naturally surrounding the rhino */}
-                <g id="kaziranga-grass">
-                  {/* Foreground tall grass stalks swaying gently */}
-                  <path d="M 80,240 Q 70,180 50,150 Q 75,190 90,240 Z" fill="url(#grass-grad)" opacity="0.9" />
-                  <path d="M 120,240 Q 135,170 155,140 Q 138,185 130,240 Z" fill="url(#grass-grad)" opacity="0.85" />
-                  <path d="M 270,240 Q 285,160 310,130 Q 288,180 280,240 Z" fill="url(#grass-grad)" opacity="0.95" />
-                  <path d="M 290,240 Q 315,170 340,145 Q 315,190 300,240 Z" fill="url(#grass-grad)" opacity="0.9" />
-                  <path d="M 220,240 Q 210,195 195,165 Q 215,200 230,240 Z" fill="#2d6a4f" opacity="0.85" />
-
-                  {/* Golden wild cane seed heads */}
-                  <circle cx="50" cy="148" r="3" fill="#f59e0b" opacity="0.8" />
-                  <circle cx="156" cy="138" r="3" fill="#f59e0b" opacity="0.8" />
-                  <circle cx="312" cy="128" r="3.5" fill="#f59e0b" opacity="0.8" />
-                </g>
-              </svg>
-
-              {/* Authentic Cultural Label Badge */}
-              <div className="mt-1 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full border border-emerald-300 shadow-sm text-center">
-                <span className="text-[10px] font-bold text-emerald-950 flex items-center justify-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-                  <span>State Heritage • One-Horned Rhinoceros (Kaziranga)</span>
-                </span>
-              </div>
-            </div>
-          </div>
 
           {/* Layer 4: Giant Tropical Elephant-Ear Leaves extending DELIBERATELY OUTSIDE viewport edge */}
           <div ref={vegFastRef} className="absolute -right-16 bottom-0 will-change-transform pointer-events-none">
@@ -606,7 +367,7 @@ const AssamScrollJourney = () => {
         <div className="pb-6 px-6 z-30 flex items-center justify-between pointer-events-auto text-xs font-semibold text-slate-600">
           <div className="flex items-center gap-2 bg-white/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-200 shadow-sm">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-            <span>Checkpoint {STAGES[activeStepIndex]?.step || String(activeStepIndex + 1).padStart(2, '0')} of 12: {STAGES[activeStepIndex]?.title}</span>
+            <span>Stage {STAGES[activeStepIndex]?.step || String(activeStepIndex + 1).padStart(2, '0')} of 09: {STAGES[activeStepIndex]?.title}</span>
           </div>
 
           <div className="hidden sm:flex items-center gap-2 text-emerald-800 bg-emerald-50/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-emerald-200">
@@ -852,7 +613,7 @@ const AssamScrollJourney = () => {
                         scale: isCurrent ? 1.03 : 0.98
                       }}
                       transition={{ duration: 0.3 }}
-                      className={`pointer-events-auto p-5 sm:p-7 rounded-3xl border transition-all ${
+                      className={`pointer-events-auto p-5 sm:p-6 rounded-3xl border transition-all ${
                         isCurrent
                           ? 'glass-card border-emerald-500 shadow-2xl shadow-emerald-950/15 ring-2 ring-emerald-500/30 bg-white'
                           : isActive
@@ -860,11 +621,18 @@ const AssamScrollJourney = () => {
                           : 'bg-white/80 border-slate-200/80 shadow-md'
                       }`}
                     >
-                      <div className="flex items-center justify-between gap-2 mb-3">
-                        <span className="text-2xl font-black text-emerald-800 tracking-tight">
-                          {stage.step}
-                        </span>
-                        <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100/80 text-emerald-900 border border-emerald-300/60">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl font-black text-emerald-800 tracking-tight">
+                            {stage.step}
+                          </span>
+                          {stage.isOffline && (
+                            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-300">
+                              Offline
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-100/80 text-emerald-900 border border-emerald-300/60">
                           {stage.category}
                         </span>
                       </div>
@@ -873,14 +641,42 @@ const AssamScrollJourney = () => {
                         {stage.title}
                       </h3>
 
-                      <div className="flex items-center gap-2 mt-2 text-xs font-semibold text-amber-700">
-                        <Calendar className="w-3.5 h-3.5" />
-                        <span>{stage.date}</span>
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
+                        <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-700">
+                          <Calendar className="w-3.5 h-3.5" />
+                          <span>{stage.date}</span>
+                        </div>
+                        {stage.cohort && (
+                          <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                            {stage.cohort}
+                          </span>
+                        )}
                       </div>
 
-                      <p className="mt-3 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                      {stage.criteria && (
+                        <div className="mt-2 text-[11px] font-semibold text-blue-800 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200">
+                          {stage.criteria}
+                        </div>
+                      )}
+
+                      <p className="mt-2.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
                         {stage.desc}
                       </p>
+
+                      {stage.pathways && (
+                        <div className="mt-3 pt-3 border-t border-slate-100">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 block mb-1.5">
+                            Post-Championship Pathways:
+                          </span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {stage.pathways.map((p) => (
+                              <span key={p} className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-amber-100/90 text-amber-950 border border-amber-300/80">
+                                {p}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </motion.div>
                   )}
                 </div>
@@ -891,8 +687,8 @@ const AssamScrollJourney = () => {
                 {/* Right Side Slot */}
                 <div
                   className={`w-full sm:w-5/12 ${!isLeft ? 'block' : 'hidden sm:block sm:invisible'} ${
-                    stage.step === '04' || stage.step === '12'
-                      ? 'sm:translate-x-12 lg:translate-x-16'
+                    stage.step === '04' || stage.step === '09'
+                      ? 'sm:translate-x-10 lg:translate-x-14'
                       : ''
                   }`}
                 >
@@ -905,7 +701,7 @@ const AssamScrollJourney = () => {
                         scale: isCurrent ? 1.03 : 0.98
                       }}
                       transition={{ duration: 0.3 }}
-                      className={`pointer-events-auto p-5 sm:p-7 rounded-3xl border transition-all ${
+                      className={`pointer-events-auto p-5 sm:p-6 rounded-3xl border transition-all ${
                         isCurrent
                           ? 'glass-card border-amber-500 shadow-2xl shadow-amber-950/15 ring-2 ring-amber-500/30 bg-white'
                           : isActive
@@ -913,11 +709,18 @@ const AssamScrollJourney = () => {
                           : 'bg-white/80 border-slate-200/80 shadow-md'
                       }`}
                     >
-                      <div className="flex items-center justify-between gap-2 mb-3">
-                        <span className="text-2xl font-black text-amber-800 tracking-tight">
-                          {stage.step}
-                        </span>
-                        <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-100/80 text-amber-900 border border-amber-300/60">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl font-black text-amber-800 tracking-tight">
+                            {stage.step}
+                          </span>
+                          {stage.isOffline && (
+                            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-300">
+                              Offline
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-100/80 text-amber-900 border border-amber-300/60">
                           {stage.category}
                         </span>
                       </div>
@@ -926,14 +729,42 @@ const AssamScrollJourney = () => {
                         {stage.title}
                       </h3>
 
-                      <div className="flex items-center gap-2 mt-2 text-xs font-semibold text-emerald-700">
-                        <Calendar className="w-3.5 h-3.5" />
-                        <span>{stage.date}</span>
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
+                        <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+                          <Calendar className="w-3.5 h-3.5" />
+                          <span>{stage.date}</span>
+                        </div>
+                        {stage.cohort && (
+                          <span className="text-[10px] font-bold text-amber-900 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                            {stage.cohort}
+                          </span>
+                        )}
                       </div>
 
-                      <p className="mt-3 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                      {stage.criteria && (
+                        <div className="mt-2 text-[11px] font-semibold text-blue-800 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200">
+                          {stage.criteria}
+                        </div>
+                      )}
+
+                      <p className="mt-2.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
                         {stage.desc}
                       </p>
+
+                      {stage.pathways && (
+                        <div className="mt-3 pt-3 border-t border-slate-100">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 block mb-1.5">
+                            Post-Championship Pathways:
+                          </span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {stage.pathways.map((p) => (
+                              <span key={p} className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-amber-100/90 text-amber-950 border border-amber-300/80">
+                                {p}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </motion.div>
                   )}
                 </div>

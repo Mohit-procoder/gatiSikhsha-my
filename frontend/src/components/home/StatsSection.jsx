@@ -3,14 +3,14 @@ import { motion } from 'framer-motion';
 import { Layers, MapPin, Users, Trophy, Award, Clock, Flame, BookOpen } from 'lucide-react';
 
 const stats = [
-  { value: '3', label: 'Competition Categories', desc: 'Classes VI-VIII, IX-X, XI-XII', icon: Layers, color: 'text-emerald-700 bg-emerald-100' },
+  { value: '3', label: 'Competition Categories', desc: 'Classes 6–8, 9–10, 11–12', icon: Layers, color: 'text-emerald-700 bg-emerald-100' },
   { value: '33', label: 'Districts of Assam', desc: '100% state-wide school reach', icon: MapPin, color: 'text-amber-700 bg-amber-100' },
-  { value: '1,000', label: 'Advanced-Phase Teams', desc: '25 cohorts in deep bootcamp', icon: Users, color: 'text-blue-700 bg-blue-100' },
-  { value: '198', label: 'Zonal Teams', desc: '33 districts × 3 categories × 2', icon: Trophy, color: 'text-purple-700 bg-purple-100' },
-  { value: '60', label: 'State Finalists', desc: 'Selected for Guwahati grand stage', icon: Award, color: 'text-amber-800 bg-amber-100' },
-  { value: '20', label: 'Finalists Per Category', desc: 'Balanced age-group parity', icon: Layers, color: 'text-teal-700 bg-teal-100' },
-  { value: '20-Hour', label: 'Initial Online Bootcamp', desc: 'Design thinking & STEM foundations', icon: BookOpen, color: 'text-indigo-700 bg-indigo-100' },
-  { value: '48-Hour', label: 'Zonal Hackathons', desc: 'Live build, test & pitch rounds', icon: Flame, color: 'text-rose-700 bg-rose-100' }
+  { value: '70,000', label: 'Registered Teams', desc: '23,333 teams per category', icon: Users, color: 'text-blue-700 bg-blue-100' },
+  { value: '5,000', label: 'District Shortlisted', desc: '1,666 / cat (~70 per district)', icon: Trophy, color: 'text-purple-700 bg-purple-100' },
+  { value: '1,980', label: 'Jury Round Teams', desc: 'Top 20 teams / district (Offline)', icon: Award, color: 'text-teal-700 bg-teal-100' },
+  { value: '150', label: 'State Finalists', desc: '50 teams per category (Offline)', icon: Layers, color: 'text-amber-800 bg-amber-100' },
+  { value: '72-Hour', label: 'State Hackathon', desc: '5-day intensive assessment', icon: Flame, color: 'text-rose-700 bg-rose-100' },
+  { value: '30', label: 'Grand Winners', desc: '10 winners / category + Pathways', icon: Award, color: 'text-indigo-700 bg-indigo-100' }
 ];
 
 const StatsSection = () => {

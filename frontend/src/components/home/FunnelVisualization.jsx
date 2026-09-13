@@ -3,17 +3,16 @@ import { motion } from 'framer-motion';
 import { ChevronDown, Sparkles, School, Users, Laptop, Brain, Rocket, Award, ShieldAlert } from 'lucide-react';
 
 const funnelSteps = [
-  { label: 'Schools Registered', count: 'All 33 Districts', width: 'w-full', bg: 'bg-emerald-900', text: 'text-white' },
-  { label: 'Student Teams Formed', count: 'State-wide Roster', width: 'w-[92%]', bg: 'bg-emerald-800', text: 'text-emerald-50' },
-  { label: '20-Hour Online Bootcamp', count: 'Foundational STEM', width: 'w-[84%]', bg: 'bg-teal-800', text: 'text-teal-50' },
-  { label: 'MCQ Knowledge Assessment', count: 'State Benchmark', width: 'w-[76%]', bg: 'bg-teal-700', text: 'text-white' },
-  { label: 'Top 1,000 Teams Shortlisted', count: '25 Advanced Cohorts', width: 'w-[68%]', bg: 'bg-amber-600', text: 'text-white' },
-  { label: 'Advanced 30-Day Bootcamp', count: 'Hardware & Code', width: 'w-[60%]', bg: 'bg-amber-700', text: 'text-amber-50' },
-  { label: 'Coding / Technical Challenge', count: 'Implementation Test', width: 'w-[52%]', bg: 'bg-amber-800', text: 'text-white' },
-  { label: '198 Zonal Qualifier Teams', count: '33 Dist × 3 Cat × 2', width: 'w-[44%]', bg: 'bg-blue-800', text: 'text-blue-50' },
-  { label: '48-Hour Zonal Hackathon', count: 'Live Divisional Rounds', width: 'w-[36%]', bg: 'bg-indigo-800', text: 'text-white' },
-  { label: '60 State Finalists', count: '20 Teams Per Category', width: 'w-[28%]', bg: 'bg-purple-800', text: 'text-purple-50' },
-  { label: 'State-Level Grand Final', count: 'Champions & Awards', width: 'w-[20%]', bg: 'bg-gradient-to-r from-amber-500 to-amber-600', text: 'text-slate-950 font-extrabold' }
+  { label: 'Stage 1: State Registrations', count: '70,000 Teams (23,333 / Category)', width: 'w-full', bg: 'bg-emerald-900', text: 'text-white' },
+  { label: 'Stage 2: 2h SSA YouTube Orientation', count: '70,000 Teams Streamed', width: 'w-[92%]', bg: 'bg-emerald-800', text: 'text-emerald-50' },
+  { label: 'Stage 3: Self-Paced Foundation Learning', count: '70,000 Teams', width: 'w-[84%]', bg: 'bg-teal-800', text: 'text-teal-50' },
+  { label: 'Stage 4: MCQ Benchmark Assessment', count: '70,000 Teams Evaluated', width: 'w-[76%]', bg: 'bg-teal-700', text: 'text-white' },
+  { label: 'Stage 5: District Level Shortlisting', count: '5,000 Teams (~70 / District)', width: 'w-[68%]', bg: 'bg-amber-600', text: 'text-white' },
+  { label: 'Stage 6: Self-Paced Advance Learning', count: '5,000 Teams Prototyping', width: 'w-[60%]', bg: 'bg-amber-700', text: 'text-amber-50' },
+  { label: 'Stage 7a: Coding (9–12) & MCQ (6–8)', count: '5,000 Teams Benchmarked', width: 'w-[52%]', bg: 'bg-amber-800', text: 'text-white' },
+  { label: 'Stage 7b: Offline Jury Round (Soft Skills)', count: '1,980 Teams (Top 20 / District)', width: 'w-[44%]', bg: 'bg-blue-800', text: 'text-blue-50' },
+  { label: 'Stage 8: 5-Day State Hackathon (72h Live)', count: '150 Finalists (50 / Category)', width: 'w-[34%]', bg: 'bg-indigo-800', text: 'text-white' },
+  { label: 'Stage 9: State Champions & Pathways', count: '30 Winners (10 / Category)', width: 'w-[24%]', bg: 'bg-gradient-to-r from-amber-500 to-amber-600', text: 'text-slate-950 font-extrabold' }
 ];
 
 const FunnelVisualization = () => {
