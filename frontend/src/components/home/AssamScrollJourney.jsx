@@ -3,9 +3,10 @@ import { motion } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
-  Calendar, CheckCircle, Award, Users, BookOpen, BrainCircuit,
-  Code2, Trophy, MapPin, Sparkles, ArrowDown, Flame
+  Calendar, Award, BookOpen, BrainCircuit,
+  Code2, Sparkles, ArrowDown
 } from 'lucide-react';
+
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -35,55 +36,30 @@ export const STAGES = [
   {
     step: '02',
     stageNumber: '2',
-    title: 'Orientation on SSA YouTube',
-    date: '1st to 10th October, 2026',
-    desc: '2-hour comprehensive digital orientation for all student teams, principals, and teacher mentors live streamed on SSA YouTube channel.',
-    category: 'Orientation',
-    icon: Users,
-    color: 'teal',
-    percent: 18,
-    cohort: '70,000 Teams (2-Hour Stream)'
-  },
-  {
-    step: '03',
-    stageNumber: '3',
     title: 'Self-Paced Foundation Learning',
     date: '10 – 22 October, 2026',
     desc: 'Self-paced foundational learning modules for all registered teams covering design thinking, problem framing, and core STEM principles.',
     category: 'Foundation Learning',
     icon: BookOpen,
     color: 'green',
-    percent: 28,
+    percent: 25,
     cohort: '70,000 Teams'
   },
   {
-    step: '04',
-    stageNumber: '4',
+    step: '03',
+    stageNumber: '3',
     title: 'Assessment by MCQ',
     date: '23 – 30 October, 2026',
     desc: 'Standardized state-wide MCQ benchmark evaluating mastery of foundational learning concepts to qualify teams for district quotas.',
     category: 'Assessment',
     icon: BrainCircuit,
     color: 'amber',
-    percent: 38,
+    percent: 42,
     cohort: '70,000 Teams Benchmark'
   },
   {
-    step: '05',
-    stageNumber: '5',
-    title: 'Shortlisting for District Level',
-    date: '1 – 7 November, 2026',
-    desc: 'Merit-based selection of top 5,000 teams equally divided across all 33 districts of Assam (~70 teams per district; 1,666 per category).',
-    category: 'District Shortlist',
-    icon: Trophy,
-    color: 'orange',
-    percent: 48,
-    cohort: '5,000 Teams (~70 / District)',
-    stats: { c11_12: '1,666', c9_10: '1,666', c6_8: '1,666', total: '5,000' }
-  },
-  {
-    step: '06',
-    stageNumber: '6',
+    step: '04',
+    stageNumber: '4',
     title: 'Self-Paced Advance Learning',
     date: '9 November – 6 December, 2026',
     desc: 'Advanced specialized learning modules for the 5,000 qualifying teams with hands-on mentoring in embedded coding, IoT, robotics, and hardware prototyping.',
@@ -94,57 +70,30 @@ export const STAGES = [
     cohort: '5,000 Teams (1,666 / Category)'
   },
   {
-    step: '07A',
-    stageNumber: '7a',
+    step: '05',
+    stageNumber: '5',
     title: 'Technical Challenge',
     date: '14 – 19 December, 2026',
     desc: 'Rigorous technical benchmark: Classes 9–12 assessed via Coding Challenge; Classes 6–8 assessed via MCQ challenge.',
     category: 'Technical Challenge',
     icon: Code2,
     color: 'blue',
-    percent: 68,
+    percent: 75,
     cohort: '5,000 Teams',
     criteria: '9–12: Coding Challenge • 6–8: MCQ'
   },
   {
-    step: '07B',
-    stageNumber: '7b',
-    title: 'Jury Round (Soft Skills)',
-    date: '21 – 26 December, 2026',
-    desc: 'Offline Jury evaluation focusing on soft skills and project defense. Top 20 teams selected per district (660 per category, 1,980 total).',
-    category: 'Offline Jury Round',
-    isOffline: true,
-    icon: CheckCircle,
-    color: 'teal',
-    percent: 78,
-    cohort: '1,980 Teams (Top 20 / District)',
-    stats: { c11_12: '660', c9_10: '660', c6_8: '660', total: '1,980' }
-  },
-  {
-    step: '08',
-    stageNumber: '8',
-    title: '5-Day State Hackathon',
+    step: '06',
+    stageNumber: '6',
+    title: '5-Day State Hackathon & Grand Winners',
     date: '4 – 8 January, 2027',
-    desc: '5-day offline assessment featuring a 72-Hour live Hackathon for 150 elite teams (50 per category). Evaluation weightage: 70% Coding/MCQ + 30% Jury round.',
-    category: 'State Hackathon',
+    desc: '5-day offline 72-Hour Hackathon for 150 elite finalists (50 per category), followed by grand felicitation of the top 30 State Champions with long-term Innovation Acceleration Pathways.',
+    category: 'Hackathon & Winners',
     isOffline: true,
-    icon: Flame,
-    color: 'indigo',
-    percent: 88,
-    cohort: '150 Finalists (50 / Category)',
-    criteria: '70% Coding/MCQ + 30% Jury Weightage'
-  },
-  {
-    step: '09',
-    stageNumber: '9',
-    title: 'Grand Winners & Pathways',
-    date: 'January 2027 / By 31 Dec 2026',
-    desc: 'Top 30 state winners (10 per category) awarded championships and inducted into long-term Innovation Acceleration Pathways.',
-    category: 'Winners & Pathways',
     icon: Award,
     color: 'amber',
-    percent: 97,
-    cohort: '30 State Champions (10 / Category)',
+    percent: 93,
+    cohort: '150 Finalists → 30 State Champions',
     stats: { c11_12: '10', c9_10: '10', c6_8: '10', total: '30' },
     pathways: [
       'R&D Publication',
@@ -155,6 +104,7 @@ export const STAGES = [
     ]
   }
 ];
+
 
 const AssamScrollJourney = () => {
   const containerRef = useRef(null);

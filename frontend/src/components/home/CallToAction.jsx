@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Sparkles, ArrowRight, School, GraduationCap } from 'lucide-react';
+import { Sparkles, School } from 'lucide-react';
 
 const CallToAction = () => {
   return (
@@ -23,21 +23,13 @@ const CallToAction = () => {
           Whether you are a school principal, a passionate science teacher, or a student with an idea to protect your community from floods or improve tea farming, this state-wide stage is yours.
         </p>
 
-        <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div className="mt-9 flex items-center justify-center">
           <Link
             to="/register/school"
-            className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-sm sm:text-base shadow-xl shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
+            className="px-8 py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-sm sm:text-base shadow-xl shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
           >
             <School className="w-4 h-4 text-emerald-950" />
             <span>Register Your School Now</span>
-          </Link>
-
-          <Link
-            to="/login/student"
-            className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-sm sm:text-base border border-white/20 transition-all flex items-center justify-center gap-2"
-          >
-            <GraduationCap className="w-4 h-4 text-amber-400" />
-            <span>Student Portal Login</span>
           </Link>
         </div>
       </div>

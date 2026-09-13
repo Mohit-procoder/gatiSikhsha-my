@@ -35,13 +35,18 @@ const Navbar = () => {
 
   const getDashboardPath = () => {
     switch (role) {
-      case 'admin': return '/admin/dashboard';
-      case 'school': return '/school/dashboard';
-      case 'student': return '/student/dashboard';
-      case 'evaluator': return '/evaluator/dashboard';
-      default: return '/';
+      case 'admin':       return '/admin/dashboard';
+      case 'school':      return '/school/dashboard';
+      case 'mentor':      return '/mentor/dashboard';
+      case 'evaluator':   return '/evaluator/dashboard';
+      case 'district':    return '/district/dashboard';
+      case 'jury':        return '/jury/dashboard';
+      case 'state_jury':  return '/state-jury/dashboard';
+      case 'student':     return '/student/dashboard';
+      default:            return '/';
     }
   };
+
 
   return (
     <>

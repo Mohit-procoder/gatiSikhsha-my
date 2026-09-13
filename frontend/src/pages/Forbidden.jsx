@@ -27,7 +27,7 @@ const Forbidden = () => {
               <span>Homepage</span>
             </Link>
             <Link
-              to="/login/student"
+              to="/login/school"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-800 text-white font-bold text-xs shadow hover:bg-emerald-900 transition-all"
             >
               <LogIn className="w-4 h-4" />

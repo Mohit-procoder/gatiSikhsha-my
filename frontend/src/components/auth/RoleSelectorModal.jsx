@@ -1,7 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, School, GraduationCap, UserCheck, X, ArrowRight, KeyRound } from 'lucide-react';
+import {
+  ShieldCheck, School, UserCheck, X, ArrowRight, KeyRound,
+  Award, Sparkles, MapPin, Compass, ChevronRight
+} from 'lucide-react';
 
 const RoleSelectorModal = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
@@ -10,48 +13,81 @@ const RoleSelectorModal = ({ isOpen, onClose }) => {
 
   const roles = [
     {
-      id: 'student',
-      title: 'Student / Team',
-      desc: 'Participate, take the assessment, and submit your innovation project.',
-      path: '/login/student',
-      registerPath: '/register/student',
-      icon: GraduationCap,
-      color: 'bg-emerald-500/10 text-emerald-700 border-emerald-200',
-      badge: 'Classes VI–XII',
-      demo: 'student@afip.demo / Student@123'
-    },
-    {
-      id: 'school',
-      title: 'School / Mentor',
-      desc: 'Register school, onboard mentors, and manage participating student teams.',
-      path: '/login/school',
-      registerPath: '/register/school',
-      icon: School,
-      color: 'bg-amber-500/10 text-amber-700 border-amber-200',
-      badge: 'Official Portal',
-      demo: 'school@afip.demo / School@123'
-    },
-    {
-      id: 'evaluator',
-      title: 'Evaluator / Jury',
-      desc: 'Review and evaluate assigned student prototype submissions with the 7-criteria rubric.',
-      path: '/login/evaluator',
-      registerPath: '/register/evaluator',
-      icon: UserCheck,
-      color: 'bg-blue-500/10 text-blue-700 border-blue-200',
-      badge: 'Expert Panel',
-      demo: 'evaluator@afip.demo / Evaluator@123'
-    },
-    {
       id: 'admin',
       title: 'Administrator',
-      desc: 'State program governance, school approvals, assignments, and leaderboard controls.',
+      desc: 'State governance, approvals & controls',
       path: '/login/admin',
       registerPath: null,
       icon: ShieldCheck,
-      color: 'bg-slate-500/10 text-slate-800 border-slate-200',
-      badge: 'State Directorate',
-      demo: 'admin@afip.demo / Admin@123'
+      iconBg: 'bg-slate-100 text-slate-700',
+      accent: 'border-l-slate-500',
+      badge: 'State Directorate'
+    },
+    {
+      id: 'school',
+      title: 'School Portal',
+      desc: 'Manage institution, teams & mentor onboarding',
+      path: '/login/school',
+      registerPath: '/register/school',
+      icon: School,
+      iconBg: 'bg-emerald-100 text-emerald-700',
+      accent: 'border-l-emerald-500',
+      badge: 'School Admin'
+    },
+    {
+      id: 'mentor',
+      title: 'Teacher Mentor',
+      desc: 'Guide teams, review projects & milestones',
+      path: '/login/mentor',
+      registerPath: null,
+      icon: Compass,
+      iconBg: 'bg-cyan-100 text-cyan-700',
+      accent: 'border-l-cyan-500',
+      badge: 'STEM Mentor'
+    },
+    {
+      id: 'evaluator',
+      title: 'Technical Evaluator',
+      desc: 'Score prototypes using the 7-criteria rubric',
+      path: '/login/evaluator',
+      registerPath: '/register/evaluator',
+      icon: UserCheck,
+      iconBg: 'bg-blue-100 text-blue-700',
+      accent: 'border-l-blue-500',
+      badge: 'Expert Panel'
+    },
+    {
+      id: 'district',
+      title: 'District Officer',
+      desc: 'Monitor district schools, teams & innovation metrics',
+      path: '/login/district',
+      registerPath: null,
+      icon: MapPin,
+      iconBg: 'bg-orange-100 text-orange-700',
+      accent: 'border-l-orange-500',
+      badge: 'District Level'
+    },
+    {
+      id: 'jury',
+      title: 'Zonal Jury',
+      desc: 'Assess hackathon teams & submit jury remarks',
+      path: '/login/jury',
+      registerPath: null,
+      icon: Award,
+      iconBg: 'bg-indigo-100 text-indigo-700',
+      accent: 'border-l-indigo-500',
+      badge: 'Jury Round'
+    },
+    {
+      id: 'state_jury',
+      title: 'State Grand Jury',
+      desc: 'Evaluate state finalists & determine winners',
+      path: '/login/state_jury',
+      registerPath: null,
+      icon: Sparkles,
+      iconBg: 'bg-amber-100 text-amber-700',
+      accent: 'border-l-amber-500',
+      badge: 'State Final'
     }
   ];
 
@@ -62,88 +98,92 @@ const RoleSelectorModal = ({ isOpen, onClose }) => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm"
+        onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      >
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+          initial={{ opacity: 0, scale: 0.96, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-2xl w-full overflow-hidden"
+          exit={{ opacity: 0, scale: 0.96, y: 12 }}
+          transition={{ duration: 0.2 }}
+          className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden"
+          style={{ maxHeight: 'calc(100vh - 48px)' }}
         >
-          {/* Header */}
-          <div className="p-6 sm:p-8 bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 text-white relative">
+          {/* Header — compact */}
+          <div className="px-5 py-4 bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 text-white relative flex items-center justify-between">
+            <div>
+              <div className="text-amber-300 text-[10px] font-bold tracking-widest uppercase mb-0.5">
+                Assam Future Innovation Program
+              </div>
+              <h2 className="text-lg font-bold tracking-tight">Select Your Portal</h2>
+            </div>
             <button
               onClick={onClose}
-              className="absolute top-5 right-5 text-white/70 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+              className="text-white/70 hover:text-white p-1.5 rounded-full hover:bg-white/10 transition-colors cursor-pointer shrink-0"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
-            <div className="text-amber-300 text-xs font-semibold tracking-wider uppercase mb-1">
-              Assam Future Innovation Program
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              Select Your Portal
-            </h2>
-            <p className="text-emerald-100/80 text-sm mt-1">
-              Choose your role to access login or new registration.
-            </p>
           </div>
 
-          {/* Role Cards Grid */}
-          <div className="p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {roles.map((r) => {
-              const Icon = r.icon;
-              return (
-                <div
-                  key={r.id}
-                  className="flex flex-col justify-between p-5 rounded-2xl border border-slate-200/90 hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-950/5 transition-all duration-200 group bg-white"
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className={`p-2.5 rounded-xl border ${r.color}`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-                        {r.badge}
-                      </span>
+          {/* Role List — scrollable, compact rows */}
+          <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 160px)' }}>
+            <div className="p-3 space-y-1.5">
+              {roles.map((r, i) => {
+                const Icon = r.icon;
+                return (
+                  <motion.div
+                    key={r.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                    onClick={() => handleSelect(r.path)}
+                    className={`flex items-center gap-3 px-3.5 py-3 rounded-xl border border-slate-200 border-l-4 ${r.accent} hover:border-emerald-400 hover:bg-emerald-50/40 hover:shadow-sm transition-all cursor-pointer group bg-white`}
+                  >
+                    {/* Icon */}
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${r.iconBg}`}>
+                      <Icon className="w-4.5 h-4.5 w-[18px] h-[18px]" />
                     </div>
 
-                    <h3 className="text-base font-bold text-slate-800">
-                      {r.title}
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                      {r.desc}
-                    </p>
-                  </div>
+                    {/* Text */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-slate-800">{r.title}</span>
+                        <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 hidden sm:inline">
+                          {r.badge}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 truncate mt-0.5">{r.desc}</p>
+                    </div>
 
-                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2">
-                    <button
-                      onClick={() => handleSelect(r.path)}
-                      className="flex-1 py-2 px-3 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold text-center transition-all flex items-center justify-center gap-1 cursor-pointer"
-                    >
-                      <span>Sign In</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                    {r.registerPath && (
+                    {/* Actions */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {r.registerPath && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleSelect(r.registerPath); }}
+                          className="text-[10px] font-semibold px-2 py-1 rounded-lg border border-slate-200 text-slate-600 hover:border-emerald-500 hover:text-emerald-800 transition-colors cursor-pointer"
+                        >
+                          Register
+                        </button>
+                      )}
                       <button
-                        onClick={() => handleSelect(r.registerPath)}
-                        className="py-2 px-3 rounded-xl border border-slate-200 hover:border-emerald-600 hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 text-xs font-semibold text-center transition-all cursor-pointer"
+                        onClick={(e) => { e.stopPropagation(); handleSelect(r.path); }}
+                        className="flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-lg bg-emerald-800 hover:bg-emerald-900 text-white transition-colors cursor-pointer"
                       >
-                        Register
+                        Sign In
+                        <ArrowRight className="w-3 h-3" />
                       </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Demo Accounts Helper Bar */}
-          <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center gap-2 text-xs text-slate-600">
-            <KeyRound className="w-4 h-4 text-amber-600 shrink-0" />
-            <div className="truncate">
-              <span className="font-semibold text-slate-800">Testing accounts: </span>
-              <span>All roles have quick one-click autofill on their respective login pages.</span>
-            </div>
+          {/* Footer hint */}
+          <div className="px-5 py-2.5 bg-slate-50 border-t border-slate-100 flex items-center gap-2 text-[11px] text-slate-500">
+            <KeyRound className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+            <span>Each portal has a one-click <strong className="text-slate-700">Autofill Demo</strong> button on its login page.</span>
           </div>
         </motion.div>
       </div>
