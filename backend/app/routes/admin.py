@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.utils.db import get_db, parse_object_id, serialize_doc
@@ -95,6 +95,126 @@ def list_schools():
 
     return api_response(data=enriched)
 
+@admin_bp.route("/schools/pending", methods=["GET"])
+@role_required("admin")
+def list_pending_schools():
+    db = get_db()
+    pending_schools = list(db.schools.find({"status": "pending"}).sort("created_at", -1))
+    enriched = []
+    for s in pending_schools:
+        s_doc = serialize_doc(s)
+        s_doc["teams_count"] = db.teams.count_documents({"school_id": s["_id"]})
+        enriched.append(s_doc)
+    return api_response(data=enriched)
+
+@admin_bp.route("/schools/<school_id>/approve", methods=["POST"])
+@role_required("admin")
+def approve_school(school_id):
+    user_id = get_jwt_identity()
+    db = get_db()
+    oid = parse_object_id(school_id)
+    school = db.schools.find_one({"_id": oid})
+    if not school:
+        return api_error("NOT_FOUND", "School not found.", status_code=404)
+
+    now = datetime.now(timezone.utc)
+    generated_code = school.get("school_code")
+    if not generated_code:
+        count = db.schools.count_documents({"status": "approved"}) + 1
+        generated_code = generate_school_code(school.get("district", "Kamrup"), count)
+        while db.schools.find_one({"school_code": generated_code}):
+            count += 1
+            generated_code = generate_school_code(school.get("district", "Kamrup"), count)
+
+    update_doc = {
+        "status": "approved",
+        "school_code": generated_code,
+        "rejection_reason": None,
+        "approved_at": now,
+        "approved_by": str(user_id),
+        "updated_at": now
+    }
+
+    db.schools.update_one({"_id": oid}, {"$set": update_doc})
+    db.users.update_one({"_id": school["user_id"]}, {"$set": {"status": "active", "is_verified": True, "updated_at": now}})
+
+    db.notifications.insert_one({
+        "recipient_role": "school",
+        "recipient_id": school["user_id"],
+        "title": "School Application Approved",
+        "message": f"Congratulations! Your school application has been approved. Your unique School Code is {generated_code}.",
+        "type": "approval",
+        "is_read": False,
+        "created_at": now
+    })
+
+    log_audit_event(
+        str(user_id), "admin", "SCHOOL_APPROVED", "schools", str(oid),
+        {"school_name": school.get("school_name"), "school_code": generated_code, "udise": school.get("udise_school_id")}
+    )
+
+    return api_response(
+        data={"status": "approved", "school_code": generated_code},
+        message=f"School '{school.get('school_name')}' approved successfully with Code {generated_code}."
+    )
+
+@admin_bp.route("/schools/<school_id>/reject", methods=["POST"])
+@role_required("admin")
+def reject_school(school_id):
+    user_id = get_jwt_identity()
+    db = get_db()
+    oid = parse_object_id(school_id)
+    school = db.schools.find_one({"_id": oid})
+    if not school:
+        return api_error("NOT_FOUND", "School not found.", status_code=404)
+
+    data = request.get_json() or {}
+    rejection_reason = data.get("rejection_reason", "").strip()
+
+    # Rejection reason is strictly mandatory per Milestone 1 specification
+    if not rejection_reason:
+        return api_error(
+            "VALIDATION_ERROR",
+            "A rejection reason is mandatory when rejecting a school application.",
+            fields={"rejection_reason": "Rejection reason cannot be empty."},
+            status_code=400
+        )
+
+    now = datetime.now(timezone.utc)
+    update_doc = {
+        "status": "rejected",
+        "rejection_reason": rejection_reason,
+        "rejected_at": now,
+        "rejected_by": str(user_id),
+        "updated_at": now
+    }
+
+    db.schools.update_one({"_id": oid}, {"$set": update_doc})
+    db.users.update_one(
+        {"_id": school["user_id"]},
+        {"$set": {"status": "rejected", "rejection_reason": rejection_reason, "updated_at": now}}
+    )
+
+    db.notifications.insert_one({
+        "recipient_role": "school",
+        "recipient_id": school["user_id"],
+        "title": "School Application Notice",
+        "message": f"Your school registration application was not approved. Reason: {rejection_reason}",
+        "type": "rejection",
+        "is_read": False,
+        "created_at": now
+    })
+
+    log_audit_event(
+        str(user_id), "admin", "SCHOOL_REJECTED", "schools", str(oid),
+        {"school_name": school.get("school_name"), "rejection_reason": rejection_reason, "udise": school.get("udise_school_id")}
+    )
+
+    return api_response(
+        data={"status": "rejected", "rejection_reason": rejection_reason},
+        message=f"School '{school.get('school_name')}' application rejected."
+    )
+
 @admin_bp.route("/schools/<school_id>/status", methods=["PATCH"])
 @role_required("admin")
 def update_school_status(school_id):
@@ -110,34 +230,59 @@ def update_school_status(school_id):
     if new_status not in ["approved", "rejected", "suspended", "pending"]:
         return api_error("VALIDATION_ERROR", "Invalid status.", status_code=400)
 
-    now = datetime.utcnow()
+    # If rejecting, validate mandatory rejection reason
+    rejection_reason = data.get("rejection_reason", "").strip()
+    if new_status == "rejected" and not rejection_reason:
+        return api_error(
+            "VALIDATION_ERROR",
+            "A rejection reason is mandatory when rejecting a school application.",
+            fields={"rejection_reason": "Rejection reason cannot be empty."},
+            status_code=400
+        )
+
+    now = datetime.now(timezone.utc)
     update_doc = {"status": new_status, "updated_at": now}
 
     # If approving and school doesn't have a code, generate one
     generated_code = school.get("school_code")
-    if new_status == "approved" and not generated_code:
-        count = db.schools.count_documents({"status": "approved"}) + 1
-        generated_code = generate_school_code(school.get("district", "Kamrup"), count)
-        while db.schools.find_one({"school_code": generated_code}):
-            count += 1
+    if new_status == "approved":
+        if not generated_code:
+            count = db.schools.count_documents({"status": "approved"}) + 1
             generated_code = generate_school_code(school.get("district", "Kamrup"), count)
-        update_doc["school_code"] = generated_code
+            while db.schools.find_one({"school_code": generated_code}):
+                count += 1
+                generated_code = generate_school_code(school.get("district", "Kamrup"), count)
+            update_doc["school_code"] = generated_code
+        update_doc["rejection_reason"] = None
+        update_doc["approved_at"] = now
+        update_doc["approved_by"] = str(user_id)
+    elif new_status == "rejected":
+        update_doc["rejection_reason"] = rejection_reason
+        update_doc["rejected_at"] = now
+        update_doc["rejected_by"] = str(user_id)
 
     db.schools.update_one({"_id": oid}, {"$set": update_doc})
-    db.users.update_one({"_id": school["user_id"]}, {"$set": {"status": new_status, "updated_at": now}})
+    user_status_map = {"approved": "active", "pending": "pending", "rejected": "rejected", "suspended": "suspended"}
+    user_update = {"status": user_status_map.get(new_status, new_status), "updated_at": now}
+    if new_status == "rejected":
+        user_update["rejection_reason"] = rejection_reason
+    db.users.update_one({"_id": school["user_id"]}, {"$set": user_update})
 
     # Notification for the school
     db.notifications.insert_one({
         "recipient_role": "school",
         "recipient_id": school["user_id"],
         "title": f"School Application {new_status.capitalize()}",
-        "message": f"Your school application has been {new_status}." + (f" Your unique School Code is {generated_code}." if generated_code else ""),
-        "type": "approval",
+        "message": f"Your school application has been {new_status}." + (f" Reason: {rejection_reason}" if rejection_reason else "") + (f" Your unique School Code is {generated_code}." if generated_code else ""),
+        "type": "approval" if new_status == "approved" else "notice",
         "is_read": False,
         "created_at": now
     })
 
-    log_audit_event(str(user_id), "admin", f"SCHOOL_{new_status.upper()}", "schools", str(oid), {"school_code": generated_code})
+    log_audit_event(
+        str(user_id), "admin", f"SCHOOL_{new_status.upper()}", "schools", str(oid),
+        {"school_code": generated_code, "rejection_reason": rejection_reason}
+    )
 
     return api_response(
         data={"status": new_status, "school_code": generated_code},
@@ -347,3 +492,466 @@ def list_all_projects():
         p_doc["evaluation_count"] = eval_count
         enriched.append(p_doc)
     return api_response(data=enriched)
+
+# =============================================================================
+# MILESTONE 3: EVALUATION & JURY MANAGEMENT, REOPEN, RUBRICS & SHORTLISTING
+# =============================================================================
+
+@admin_bp.route("/evaluations", methods=["GET"])
+@role_required("admin")
+def list_all_evaluations():
+    """
+    Admin overview of all evaluations (Technical, Jury, State Jury) with filters.
+    """
+    db = get_db()
+    eval_type = request.args.get("type") # 'TECHNICAL' | 'JURY' | 'STATE_JURY'
+    status = request.args.get("status") # 'draft' | 'submitted' | 'locked'
+
+    query = {}
+    if eval_type and eval_type != "all":
+        query["evaluation_type"] = eval_type
+    if status and status != "all":
+        query["status"] = status
+
+    evals = list(db.evaluations.find(query).sort("updated_at", -1))
+    enriched = []
+    for ev in evals:
+        item = serialize_doc(ev)
+        team = db.teams.find_one({"_id": ev.get("team_id")}) if ev.get("team_id") else None
+        project = db.projects.find_one({"_id": ev.get("project_id")}) if ev.get("project_id") else None
+        item["team"] = serialize_doc(team) if team else None
+        item["project"] = serialize_doc(project) if project else None
+        enriched.append(item)
+
+    return api_response(data=enriched)
+
+@admin_bp.route("/evaluations/assignments", methods=["GET", "POST"])
+@role_required("admin")
+def manage_evaluation_assignments():
+    user_id = get_jwt_identity()
+    db = get_db()
+
+    if request.method == "GET":
+        assignments = list(db.evaluation_assignments.find().sort("assigned_at", -1))
+        enriched = []
+        for a in assignments:
+            item = serialize_doc(a)
+            team = db.teams.find_one({"_id": a.get("team_id")}) if a.get("team_id") else None
+            project = db.projects.find_one({"_id": a.get("project_id")}) if a.get("project_id") else None
+            evaluator = db.evaluators.find_one({"_id": a.get("evaluator_id")}) or db.users.find_one({"_id": a.get("evaluator_id")})
+            item["team"] = serialize_doc(team) if team else None
+            item["project"] = serialize_doc(project) if project else None
+            item["evaluator_name"] = evaluator.get("full_name") or evaluator.get("name") if evaluator else "Expert"
+            enriched.append(item)
+        return api_response(data=enriched)
+
+    # POST: Create assignment
+    data = request.get_json() or {}
+    assignment_type = data.get("assignment_type", "TECHNICAL").upper() # 'TECHNICAL' | 'JURY' | 'STATE_JURY'
+    evaluator_id_str = data.get("evaluator_id")
+    target_id_str = data.get("target_id") # project_id or team_id
+    deadline = data.get("deadline", "2026-12-30T23:59:59Z")
+
+    if not evaluator_id_str or not target_id_str:
+        return api_error("VALIDATION_ERROR", "evaluator_id and target_id (project or team) are required.", status_code=400)
+
+    eval_oid = parse_object_id(evaluator_id_str)
+    target_oid = parse_object_id(target_id_str)
+    now = datetime.now(timezone.utc)
+
+    # Resolve team and project
+    team = None
+    project = None
+    if assignment_type == "TECHNICAL":
+        project = db.projects.find_one({"_id": target_oid})
+        if project and project.get("team_id"):
+            team = db.teams.find_one({"_id": project["team_id"]})
+    else: # JURY or STATE_JURY
+        team = db.teams.find_one({"_id": target_oid})
+        if not team:
+            project = db.projects.find_one({"_id": target_oid})
+            if project and project.get("team_id"):
+                team = db.teams.find_one({"_id": project["team_id"]})
+        else:
+            if team.get("project_id"):
+                project = db.projects.find_one({"_id": team["project_id"]})
+
+    assign_doc = {
+        "assignment_type": assignment_type,
+        "evaluator_id": eval_oid,
+        "team_id": team["_id"] if team else None,
+        "project_id": project["_id"] if project else None,
+        "assigned_by": parse_object_id(user_id),
+        "assigned_at": now,
+        "deadline": deadline,
+        "status": "assigned",
+        "conflict_status": "no_conflict"
+    }
+
+    # Upsert or insert assignment
+    res = db.evaluation_assignments.insert_one(assign_doc)
+    assign_id = res.inserted_id
+
+    # Dispatch notification to expert
+    evaluator_user = db.users.find_one({"_id": eval_oid}) or db.evaluators.find_one({"_id": eval_oid})
+    target_user_id = evaluator_user.get("user_id") if isinstance(evaluator_user, dict) else eval_oid
+
+    db.notifications.insert_one({
+        "recipient_role": assignment_type.lower(),
+        "recipient_id": target_user_id,
+        "title": f"New {assignment_type} Evaluation Assigned",
+        "message": f"You have been assigned to evaluate '{team.get('team_name') if team else project.get('title') if project else 'Submission'}'.",
+        "type": "assignment",
+        "is_read": False,
+        "created_at": now
+    })
+
+    log_audit_event(str(user_id), "admin", "EVALUATION_ASSIGNED", "evaluation_assignments", str(assign_id), {
+        "assignment_type": assignment_type, "evaluator_id": str(eval_oid)
+    })
+
+    return api_response(
+        data={"assignment_id": str(assign_id)},
+        message=f"{assignment_type} assignment successfully created.",
+        status_code=201
+    )
+
+@admin_bp.route("/evaluations/<evaluation_id>/reopen", methods=["POST"])
+@role_required("admin")
+def reopen_evaluation(evaluation_id):
+    """
+    CRITICAL AUDIT REQUIREMENT:
+    Admin reopens a submitted/locked evaluation.
+    Reason is MANDATORY. Creates explicit audit log.
+    """
+    user_id = get_jwt_identity()
+    db = get_db()
+    eval_oid = parse_object_id(evaluation_id)
+
+    eval_doc = db.evaluations.find_one({"_id": eval_oid})
+    if not eval_doc:
+        return api_error("NOT_FOUND", "Evaluation record not found.", status_code=404)
+
+    data = request.get_json() or {}
+    reason = data.get("reason", "").strip()
+
+    if not reason:
+        return api_error("VALIDATION_ERROR", "Mandatory reason required to reopen an evaluation.", status_code=400)
+
+    now = datetime.now(timezone.utc)
+    db.evaluations.update_one(
+        {"_id": eval_oid},
+        {"$set": {
+            "status": "draft",
+            "is_unlocked": True,
+            "reopened_by": parse_object_id(user_id),
+            "reopen_reason": reason,
+            "reopened_at": now,
+            "updated_at": now
+        }}
+    )
+
+    # Also update assignment status to in_progress
+    if eval_doc.get("assignment_id"):
+        db.evaluation_assignments.update_one(
+            {"_id": eval_doc["assignment_id"]},
+            {"$set": {"status": "in_progress"}}
+        )
+
+    # Mandatory Audit Log
+    log_audit_event(
+        str(user_id), "admin", "EVALUATION_REOPENED", "evaluations", str(eval_oid),
+        {"reason": reason, "previous_score": eval_doc.get("total_score"), "evaluation_type": eval_doc.get("evaluation_type")}
+    )
+
+    # Notify evaluator
+    db.notifications.insert_one({
+        "recipient_role": str(eval_doc.get("evaluation_type", "evaluator")).lower(),
+        "recipient_id": eval_doc.get("evaluator_id"),
+        "title": "Evaluation Reopened by Administrator",
+        "message": f"Your evaluation for submission has been reopened for adjustments. Reason: {reason}",
+        "type": "evaluation_reopened",
+        "is_read": False,
+        "created_at": now
+    })
+
+    return api_response(message="Evaluation successfully unlocked and reopened for edits.", data={"evaluation_id": str(eval_oid)})
+
+@admin_bp.route("/evaluations/<evaluation_id>/lock", methods=["POST"])
+@role_required("admin")
+def lock_evaluation(evaluation_id):
+    user_id = get_jwt_identity()
+    db = get_db()
+    eval_oid = parse_object_id(evaluation_id)
+
+    eval_doc = db.evaluations.find_one({"_id": eval_oid})
+    if not eval_doc:
+        return api_error("NOT_FOUND", "Evaluation not found.", status_code=404)
+
+    now = datetime.now(timezone.utc)
+    db.evaluations.update_one(
+        {"_id": eval_oid},
+        {"$set": {
+            "status": "submitted",
+            "is_unlocked": False,
+            "locked_at": now,
+            "updated_at": now
+        }}
+    )
+
+    log_audit_event(str(user_id), "admin", "EVALUATION_LOCKED", "evaluations", str(eval_oid))
+    return api_response(message="Evaluation locked successfully.")
+
+@admin_bp.route("/rubrics", methods=["GET", "POST"])
+@role_required("admin")
+def manage_rubrics():
+    user_id = get_jwt_identity()
+    db = get_db()
+
+    if request.method == "GET":
+        rubrics = list(db.rubrics.find().sort("rubric_type", 1))
+        return api_response(data=serialize_doc(rubrics))
+
+    data = request.get_json() or {}
+    rubric_type = data.get("rubric_type", "TECHNICAL").upper()
+    title = data.get("title", f"{rubric_type} Rubric")
+    criteria = data.get("criteria", [])
+
+    if not criteria:
+        return api_error("VALIDATION_ERROR", "Criteria list is required.", status_code=400)
+
+    total_max = sum(float(c.get("max", 10)) for c in criteria)
+    now = datetime.now(timezone.utc)
+
+    rubric_doc = {
+        "rubric_type": rubric_type,
+        "title": title,
+        "total_max": total_max,
+        "criteria": criteria,
+        "is_active": True,
+        "updated_at": now
+    }
+
+    db.rubrics.update_one(
+        {"rubric_type": rubric_type},
+        {"$set": rubric_doc, "$setOnInsert": {"created_at": now}},
+        upsert=True
+    )
+
+    log_audit_event(str(user_id), "admin", "RUBRIC_CONFIGURED", "rubrics", rubric_type, {"criteria_count": len(criteria), "total_max": total_max})
+    return api_response(message=f"{rubric_type} rubric saved and activated successfully.")
+
+@admin_bp.route("/shortlists/generate", methods=["POST"])
+@role_required("admin")
+def generate_stage_shortlist():
+    """
+    REUSABLE SHORTLISTING & WEIGHTAGE ENGINE:
+    Calculates composite scores based on configured stage weightage:
+    - District Level Shortlisting (Step 05): ~70 teams per district based on MCQ Score (70%) + Technical/Quiz (30%)
+    - Jury Round Shortlisting (Step 07B): Top 20 teams per district based on Coding (70%) + Jury (30%)
+    - Final State Winners (Step 09): Top 30 teams across Assam.
+    """
+    user_id = get_jwt_identity()
+    db = get_db()
+    data = request.get_json() or {}
+    stage = data.get("stage", "district_shortlisting") # 'district_shortlisting' | 'jury_round' | 'state_winners'
+    quota_per_district = int(data.get("quota_per_district", 70) if stage == "district_shortlisting" else 20)
+    top_winners_count = int(data.get("top_winners_count", 30))
+
+    now = datetime.now(timezone.utc)
+
+    # 1. Fetch all active teams
+    teams = list(db.teams.find({"status": "active"}))
+    ranked_teams = []
+
+    for team in teams:
+        quiz_score = float(team.get("quiz_score", 0)) # out of 20 or scaled
+        tech_score = float(team.get("evaluation_score", 0)) # out of 100
+        jury_score = float(team.get("jury_score", 0)) # out of 100
+        coding_score = float(team.get("coding_score", tech_score)) # out of 100
+
+        # Apply configurable stage formula
+        if stage == "district_shortlisting":
+            # 70% MCQ + 30% Evaluation / Foundation
+            mcq_scaled = (quiz_score / 20.0) * 100.0 if quiz_score <= 20 else quiz_score
+            composite = round((mcq_scaled * 0.70) + (tech_score * 0.30), 2)
+        elif stage == "jury_round":
+            # 70% Coding Challenge + 30% Jury Evaluation
+            composite = round((coding_score * 0.70) + (jury_score * 0.30), 2)
+        else: # state_winners / grand finale
+            state_jury_score = float(team.get("state_jury_score", jury_score))
+            composite = round((coding_score * 0.40) + (jury_score * 0.30) + (state_jury_score * 0.30), 2)
+
+        ranked_teams.append({
+            "team_id": team["_id"],
+            "team_name": team.get("team_name"),
+            "district": team.get("district", "Kamrup"),
+            "category": team.get("category", "IX-X"),
+            "school_name": team.get("school_name"),
+            "quiz_score": quiz_score,
+            "evaluation_score": tech_score,
+            "jury_score": jury_score,
+            "composite_score": composite
+        })
+
+    # Group by district and sort
+    from collections import defaultdict
+    district_groups = defaultdict(list)
+    for rt in ranked_teams:
+        district_groups[rt["district"]].append(rt)
+
+    shortlisted_team_ids = []
+    shortlist_summary = {}
+
+    if stage in ["district_shortlisting", "jury_round"]:
+        for dist, dteams in district_groups.items():
+            dteams.sort(key=lambda x: x["composite_score"], reverse=True)
+            shortlisted_in_dist = dteams[:quota_per_district]
+            for rank_idx, st in enumerate(shortlisted_in_dist, start=1):
+                st["rank_in_district"] = rank_idx
+                shortlisted_team_ids.append(st["team_id"])
+            shortlist_summary[dist] = {
+                "total_eligible": len(dteams),
+                "shortlisted": len(shortlisted_in_dist),
+                "top_score": shortlisted_in_dist[0]["composite_score"] if shortlisted_in_dist else 0
+            }
+    else: # state_winners
+        ranked_teams.sort(key=lambda x: x["composite_score"], reverse=True)
+        top_winners = ranked_teams[:top_winners_count]
+        for rank_idx, st in enumerate(top_winners, start=1):
+            st["state_rank"] = rank_idx
+            shortlisted_team_ids.append(st["team_id"])
+        shortlist_summary["state_wide"] = {
+            "total_eligible": len(ranked_teams),
+            "shortlisted": len(top_winners),
+            "top_score": top_winners[0]["composite_score"] if top_winners else 0
+        }
+
+    # Save shortlist record in DB
+    shortlist_record = {
+        "stage": stage,
+        "generated_by": parse_object_id(user_id),
+        "generated_at": now,
+        "is_published": False,
+        "total_shortlisted": len(shortlisted_team_ids),
+        "shortlisted_team_ids": shortlisted_team_ids,
+        "summary": shortlist_summary
+    }
+    s_res = db.shortlists.insert_one(shortlist_record)
+
+    log_audit_event(str(user_id), "admin", "SHORTLIST_GENERATED", "shortlists", str(s_res.inserted_id), {
+        "stage": stage, "total_shortlisted": len(shortlisted_team_ids)
+    })
+
+    return api_response(
+        data={
+            "shortlist_id": str(s_res.inserted_id),
+            "stage": stage,
+            "total_shortlisted": len(shortlisted_team_ids),
+            "summary": shortlist_summary
+        },
+        message=f"Shortlist generated for '{stage}' with {len(shortlisted_team_ids)} qualified squads."
+    )
+
+@admin_bp.route("/shortlists/publish", methods=["POST"])
+@role_required("admin")
+def publish_shortlist():
+    user_id = get_jwt_identity()
+    db = get_db()
+    data = request.get_json() or {}
+    shortlist_id = parse_object_id(data.get("shortlist_id"))
+
+    shortlist = db.shortlists.find_one({"_id": shortlist_id})
+    if not shortlist:
+        return api_error("NOT_FOUND", "Shortlist record not found.", status_code=404)
+
+    now = datetime.now(timezone.utc)
+    stage = shortlist.get("stage", "district_shortlisting")
+    next_stage_map = {
+        "district_shortlisting": "advanced_learning",
+        "jury_round": "hackathon",
+        "state_winners": "state_finale"
+    }
+    next_stage = next_stage_map.get(stage, "state_finale")
+    target_status = "winner" if stage == "state_winners" else "shortlisted"
+
+    # Advance shortlisted squads
+    team_ids = shortlist.get("shortlisted_team_ids", [])
+    db.teams.update_many(
+        {"_id": {"$in": team_ids}},
+        {"$set": {
+            "qualification_status": target_status,
+            "competition_stage": next_stage,
+            "updated_at": now
+        }}
+    )
+
+    db.shortlists.update_one(
+        {"_id": shortlist_id},
+        {"$set": {"is_published": True, "published_at": now}}
+    )
+
+    # Broadcast notification to schools & districts
+    db.notifications.insert_one({
+        "recipient_role": "all",
+        "recipient_id": None,
+        "title": f"Official Results Published: {stage.replace('_', ' ').title()}",
+        "message": f"The official qualified squads list for {stage.replace('_', ' ').title()} has been authorized and published.",
+        "type": "shortlist_published",
+        "is_read": False,
+        "created_at": now
+    })
+
+    log_audit_event(str(user_id), "admin", "SHORTLIST_PUBLISHED", "shortlists", str(shortlist_id), {
+        "stage": stage, "teams_advanced": len(team_ids)
+    })
+
+    return api_response(message=f"Shortlist published successfully. {len(team_ids)} teams advanced to {next_stage}.")
+
+@admin_bp.route("/winners/publish", methods=["POST"])
+@role_required("admin")
+def publish_state_winners():
+    """
+    Final Stage 9: Declares and locks the official 30 Winners across Assam.
+    """
+    user_id = get_jwt_identity()
+    db = get_db()
+    data = request.get_json() or {}
+    winner_team_ids = [parse_object_id(tid) for tid in data.get("winner_team_ids", [])]
+
+    if not winner_team_ids:
+        # Auto-pick top 30 finalists by composite / jury score
+        top_teams = list(db.teams.find({
+            "$or": [
+                {"qualification_status": {"$in": ["finalist", "shortlisted"]}},
+                {"competition_stage": {"$in": ["hackathon", "state_finale"]}}
+            ]
+        }).sort("evaluation_score", -1).limit(30))
+        winner_team_ids = [t["_id"] for t in top_teams]
+
+    now = datetime.now(timezone.utc)
+    db.teams.update_many(
+        {"_id": {"$in": winner_team_ids}},
+        {"$set": {
+            "qualification_status": "winner",
+            "competition_stage": "state_finale",
+            "is_winner_locked": True,
+            "winner_declared_at": now
+        }}
+    )
+
+    db.settings.update_one(
+        {"key": "competition"},
+        {"$set": {"winners_declared": True, "winners_locked": True, "updated_at": now}},
+        upsert=True
+    )
+
+    log_audit_event(str(user_id), "admin", "WINNERS_PUBLISHED", "settings", "competition", {
+        "total_winners": len(winner_team_ids), "is_locked": True
+    })
+
+    return api_response(
+        data={"total_winners": len(winner_team_ids)},
+        message=f"State Grand Finale: Official {len(winner_team_ids)} winners declared and locked successfully."
+    )
+

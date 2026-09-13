@@ -37,6 +37,7 @@ const RegisterSchool = () => {
     udise_school_id: '',
     address_line_1: '',
     address_line_2: '',
+    block: '',
     district: 'Kamrup',
     state: 'Assam',
     pin_code: '',
@@ -451,6 +452,21 @@ const RegisterSchool = () => {
                             required
                             placeholder="Street, Educational Zone or Landmark"
                             value={formData.address_line_1}
+                            onChange={handleChange}
+                            className="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 border border-slate-200 focus:bg-white focus:outline-emerald-600"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            Educational Block / Sub-Division *
+                          </label>
+                          <input
+                            type="text"
+                            name="block"
+                            required
+                            placeholder="e.g. Rani Development Block / Guwahati East"
+                            value={formData.block}
                             onChange={handleChange}
                             className="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 border border-slate-200 focus:bg-white focus:outline-emerald-600"
                           />

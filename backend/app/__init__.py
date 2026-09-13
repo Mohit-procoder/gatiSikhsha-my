@@ -35,16 +35,19 @@ def create_app(config_class=Config):
     # Initialize Database
     init_db(app)
 
-    # Register Blueprints
     from app.routes.auth import auth_bp
     from app.routes.schools import schools_bp
     from app.routes.teams import teams_bp
     from app.routes.projects import projects_bp
     from app.routes.quizzes import quizzes_bp
     from app.routes.evaluators import evaluators_bp
+    from app.routes.jury import jury_bp
+    from app.routes.state_jury import state_jury_bp
     from app.routes.admin import admin_bp
     from app.routes.leaderboard import leaderboard_bp
     from app.routes.notifications import notifications_bp
+    from app.routes.mentors import mentors_bp
+    from app.routes.districts import districts_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(schools_bp)
@@ -52,9 +55,13 @@ def create_app(config_class=Config):
     app.register_blueprint(projects_bp)
     app.register_blueprint(quizzes_bp)
     app.register_blueprint(evaluators_bp)
+    app.register_blueprint(jury_bp)
+    app.register_blueprint(state_jury_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(leaderboard_bp)
     app.register_blueprint(notifications_bp)
+    app.register_blueprint(mentors_bp)
+    app.register_blueprint(districts_bp)
 
     @app.route("/api/v1/health", methods=["GET"])
     def healthcheck():
