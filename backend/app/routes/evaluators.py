@@ -1,12 +1,27 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.utils.db import get_db, parse_object_id, serialize_doc
-from app.utils.helpers import api_response, api_error, hash_password
+from app.utils.helpers import api_response, api_error, hash_password, generate_evaluation_id
 from app.middleware.auth_middleware import role_required
 from app.utils.audit import log_audit_event
 
 evaluators_bp = Blueprint("evaluators", __name__, url_prefix="/api/v1/evaluators")
+
+DEFAULT_TECHNICAL_RUBRIC = {
+    "rubric_type": "TECHNICAL",
+    "title": "Technical Innovation & Feasibility Rubric",
+    "total_max": 100,
+    "criteria": [
+        {"key": "innovation", "label": "Innovation & Originality", "max": 20, "desc": "Novelty of approach, uniqueness vs standard hobby kits."},
+        {"key": "problem_understanding", "label": "Problem Understanding & Context", "max": 15, "desc": "Clarity of the specific Assam problem and beneficiary empathy."},
+        {"key": "technical_implementation", "label": "Technical Implementation", "max": 20, "desc": "Hardware craft, software robustness, sensor integration."},
+        {"key": "feasibility", "label": "Feasibility & Workability", "max": 15, "desc": "Viability under real Assam field conditions (flooding, power outages)."},
+        {"key": "social_impact", "label": "Social & Regional Impact", "max": 15, "desc": "Potential to protect lives, boost livelihoods or environment."},
+        {"key": "scalability", "label": "Scalability & Replication", "max": 10, "desc": "Ease of expanding across other Assam blocks and districts."},
+        {"key": "presentation", "label": "Presentation & Documentation", "max": 5, "desc": "Clarity of explanation, structure of demo & materials."}
+    ]
+}
 
 @evaluators_bp.route("/register", methods=["POST"])
 def register_evaluator():
@@ -24,7 +39,7 @@ def register_evaluator():
     if db.users.find_one({"email": email}):
         return api_error("DUPLICATE_EMAIL", "An account with this email already exists.", status_code=409)
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     user_res = db.users.insert_one({
         "email": email,
         "password_hash": hash_password(data["password"]),
@@ -70,6 +85,40 @@ def register_evaluator():
         status_code=201
     )
 
+@evaluators_bp.route("/me", methods=["GET"])
+@role_required("evaluator")
+def get_evaluator_profile():
+    user_id = get_jwt_identity()
+    db = get_db()
+    evaluator = db.evaluators.find_one({"user_id": parse_object_id(user_id)})
+    if not evaluator:
+        return api_error("NOT_FOUND", "Evaluator profile not found.", status_code=404)
+
+    total_assigned = db.evaluation_assignments.count_documents({"evaluator_id": evaluator["_id"]})
+    completed = db.evaluations.count_documents({"evaluator_id": evaluator["_id"], "status": "submitted"})
+    in_progress = db.evaluations.count_documents({"evaluator_id": evaluator["_id"], "status": "draft"})
+    conflicts = db.evaluation_assignments.count_documents({"evaluator_id": evaluator["_id"], "conflict_status": "conflict_declared"})
+    pending = max(0, total_assigned - completed - conflicts)
+
+    data = serialize_doc(evaluator)
+    data["stats"] = {
+        "assigned": total_assigned,
+        "pending": pending,
+        "in_progress": in_progress,
+        "completed": completed,
+        "conflicts": conflicts
+    }
+    return api_response(data=data)
+
+@evaluators_bp.route("/rubric", methods=["GET"])
+@role_required("evaluator")
+def get_technical_rubric():
+    db = get_db()
+    rubric = db.rubrics.find_one({"rubric_type": "TECHNICAL", "is_active": True})
+    if not rubric:
+        rubric = DEFAULT_TECHNICAL_RUBRIC
+    return api_response(data=serialize_doc(rubric))
+
 @evaluators_bp.route("/assignments", methods=["GET"])
 @role_required("evaluator")
 def get_evaluator_assignments():
@@ -102,6 +151,83 @@ def get_evaluator_assignments():
 
     return api_response(data=enriched)
 
+@evaluators_bp.route("/assignments/<assignment_id>/conflict", methods=["POST"])
+@role_required("evaluator")
+def declare_conflict_of_interest(assignment_id):
+    """
+    Conflict of Interest Gate:
+    Evaluator confirms 'no_conflict' OR declares 'conflict_declared'.
+    If conflict is declared, evaluation is blocked, Admin is alerted, and audit logged.
+    """
+    user_id = get_jwt_identity()
+    db = get_db()
+    evaluator = db.evaluators.find_one({"user_id": parse_object_id(user_id)})
+    if not evaluator:
+        return api_error("NOT_FOUND", "Evaluator not found.", status_code=404)
+
+    assign_oid = parse_object_id(assignment_id)
+    assignment = db.evaluation_assignments.find_one({
+        "_id": assign_oid,
+        "evaluator_id": evaluator["_id"]
+    })
+    if not assignment:
+        return api_error("FORBIDDEN", "Unauthorized assignment access.", status_code=403)
+
+    data = request.get_json() or {}
+    decision = data.get("decision", "").strip().lower() # 'no_conflict' | 'conflict_declared'
+    reason = data.get("reason", "").strip()
+
+    if decision not in ["no_conflict", "conflict_declared"]:
+        return api_error("VALIDATION_ERROR", "Decision must be 'no_conflict' or 'conflict_declared'.", status_code=400)
+
+    now = datetime.now(timezone.utc)
+    if decision == "conflict_declared":
+        if not reason:
+            return api_error("VALIDATION_ERROR", "Please provide a reason for declaring conflict of interest.", status_code=400)
+
+        db.evaluation_assignments.update_one(
+            {"_id": assign_oid},
+            {"$set": {
+                "conflict_status": "conflict_declared",
+                "conflict_reason": reason,
+                "conflict_declared_at": now,
+                "status": "conflict"
+            }}
+        )
+
+        # Notify admin of conflict
+        db.notifications.insert_one({
+            "recipient_role": "admin",
+            "recipient_id": None,
+            "title": "Conflict of Interest Declared",
+            "message": f"Evaluator {evaluator.get('full_name')} declared conflict for project {assignment.get('project_id')}. Reason: {reason}",
+            "type": "conflict_alert",
+            "is_read": False,
+            "created_at": now
+        })
+
+        log_audit_event(str(user_id), "evaluator", "CONFLICT_DECLARED", "evaluation_assignments", str(assign_oid), {
+            "reason": reason, "project_id": str(assignment.get("project_id"))
+        })
+
+        return api_response(
+            data={"conflict_status": "conflict_declared", "status": "conflict"},
+            message="Conflict of interest recorded. The assignment has been flagged for administrative reassignment."
+        )
+    else:
+        db.evaluation_assignments.update_one(
+            {"_id": assign_oid},
+            {"$set": {
+                "conflict_status": "no_conflict",
+                "conflict_confirmed_at": now
+            }}
+        )
+        log_audit_event(str(user_id), "evaluator", "CONFLICT_CHECK_CLEARED", "evaluation_assignments", str(assign_oid))
+        return api_response(
+            data={"conflict_status": "no_conflict"},
+            message="No conflict confirmed. You may now evaluate this project."
+        )
+
 @evaluators_bp.route("/projects/<project_id>", methods=["GET"])
 @role_required("evaluator")
 def get_assigned_project(project_id):
@@ -122,6 +248,9 @@ def get_assigned_project(project_id):
     })
     if not assignment:
         return api_error("FORBIDDEN", "Unauthorized: This project has not been assigned to you for evaluation.", status_code=403)
+
+    if assignment.get("conflict_status") == "conflict_declared":
+        return api_error("FORBIDDEN", "Conflict of interest was declared on this assignment. Access is blocked.", status_code=403)
 
     project = db.projects.find_one({"_id": proj_oid})
     if not project:
@@ -161,44 +290,53 @@ def submit_evaluation():
     if not assignment:
         return api_error("FORBIDDEN", "Unauthorized: You are not assigned to evaluate this submission.", status_code=403)
 
+    if assignment.get("conflict_status") == "conflict_declared":
+        return api_error("FORBIDDEN", "Cannot evaluate project with declared Conflict of Interest.", status_code=403)
+
     existing_eval = db.evaluations.find_one({"assignment_id": assignment["_id"]})
-    if existing_eval and existing_eval.get("status") == "submitted" and not existing_eval.get("is_unlocked"):
-        return api_error("LOCKED", "This evaluation has been locked and submitted. Contact Admin to request reopening.", status_code=400)
+    if existing_eval and existing_eval.get("status") in ["submitted", "locked"] and not existing_eval.get("is_unlocked"):
+        return api_error("LOCKED", "This evaluation has been finalized and locked. Contact Admin to request reopening.", status_code=400)
 
-    # 7-Criteria Rubric (max 100)
+    # Fetch active rubric
+    rubric = db.rubrics.find_one({"rubric_type": "TECHNICAL", "is_active": True}) or DEFAULT_TECHNICAL_RUBRIC
+    criteria = rubric.get("criteria", DEFAULT_TECHNICAL_RUBRIC["criteria"])
+
     scores = data.get("scores", {})
-    innovation = min(20, max(0, float(scores.get("innovation", 0))))
-    problem_understanding = min(15, max(0, float(scores.get("problem_understanding", 0))))
-    technical_implementation = min(20, max(0, float(scores.get("technical_implementation", 0))))
-    feasibility = min(15, max(0, float(scores.get("feasibility", 0))))
-    social_impact = min(15, max(0, float(scores.get("social_impact", 0))))
-    scalability = min(10, max(0, float(scores.get("scalability", 0))))
-    presentation = min(5, max(0, float(scores.get("presentation", 0))))
+    validated_scores = {}
+    total_score = 0.0
 
-    total_score = round(innovation + problem_understanding + technical_implementation + feasibility + social_impact + scalability + presentation, 2)
+    for crit in criteria:
+        ckey = crit["key"]
+        cmax = float(crit.get("max", 10))
+        val = max(0.0, min(cmax, float(scores.get(ckey, 0))))
+        validated_scores[ckey] = val
+        total_score += val
 
-    now = datetime.utcnow()
+    total_score = round(total_score, 2)
+    validated_scores["total"] = total_score
+
+    now = datetime.now(timezone.utc)
+    eval_count = db.evaluations.count_documents({}) + 1
+    eval_custom_id = generate_evaluation_id(eval_count)
+
     eval_doc = {
+        "evaluation_custom_id": existing_eval.get("evaluation_custom_id", eval_custom_id) if existing_eval else eval_custom_id,
         "assignment_id": assignment["_id"],
         "project_id": project_id,
+        "team_id": assignment.get("team_id") or db.projects.find_one({"_id": project_id}, {"team_id": 1}).get("team_id"),
         "evaluator_id": evaluator["_id"],
         "evaluator_name": evaluator.get("full_name"),
-        "scores": {
-            "innovation": innovation,
-            "problem_understanding": problem_understanding,
-            "technical_implementation": technical_implementation,
-            "feasibility": feasibility,
-            "social_impact": social_impact,
-            "scalability": scalability,
-            "presentation": presentation,
-            "total": total_score
-        },
+        "evaluation_type": "TECHNICAL",
+        "scores": validated_scores,
+        "total_score": total_score,
         "strengths": data.get("strengths", ""),
         "areas_for_improvement": data.get("areas_for_improvement", ""),
         "comments": data.get("comments", ""),
         "recommendation": data.get("recommendation", "Recommended"),
         "status": "draft" if is_draft else "submitted",
         "is_unlocked": False,
+        "submitted_at": None if is_draft else now,
+        "locked_at": None if is_draft else now,
         "updated_at": now
     }
 
@@ -225,10 +363,11 @@ def submit_evaluation():
     log_audit_event(
         str(user_id), "evaluator",
         "EVALUATION_DRAFT_SAVED" if is_draft else "EVALUATION_SUBMITTED",
-        "evaluations", str(eval_id), {"total_score": total_score}
+        "evaluations", str(eval_id), {"total_score": total_score, "is_locked": not is_draft}
     )
 
     return api_response(
         data={"evaluation_id": str(eval_id), "total_score": total_score, "status": "draft" if is_draft else "submitted"},
         message="Evaluation draft saved." if is_draft else "Evaluation submitted and locked successfully."
     )
+

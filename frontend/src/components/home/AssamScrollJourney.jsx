@@ -34,25 +34,25 @@ export const STAGES = [
 ];
 
 // =============================================================================
-// SERPENTINE SVG PATH (3-row layout, viewBox 800x380)
-// Row 1 left->right: 01-04  (y=80)
-// Row 2 right->left: 07B-05 (y=200)
-// Row 3 left->right: 08-09  (y=310)
+// SERPENTINE SVG PATH — Scaled up to match Journey page visual (viewBox 1200x920)
+// Row 1 left->right: 01-04  (y=100)
+// Row 2 right->left: 07B-05 (y=420)
+// Row 3 left->right: 08-09  (y=740)
 // =============================================================================
-const SERP_PATH = 'M 80,80 L 680,80 C 760,80 760,200 680,200 L 80,200 C 20,200 20,310 80,310 L 320,310';
+const SERP_PATH = 'M 160,100 L 1030,100 C 1180,100 1180,420 1030,420 L 160,420 C 20,420 20,740 160,740 L 450,740';
 
-// Initial node positions (refined by getPointAtLength after mount)
+// Node coordinates matching the Journey page SVG_COORDS
 const NODE_COORDS_INIT = [
-  { x: 80,  y: 80  },
-  { x: 242, y: 80  },
-  { x: 402, y: 80  },
-  { x: 562, y: 80  },
-  { x: 680, y: 140 },
-  { x: 519, y: 200 },
-  { x: 360, y: 200 },
-  { x: 200, y: 200 },
-  { x: 80,  y: 255 },
-  { x: 320, y: 310 },
+  { x: 160,  y: 100 },
+  { x: 450,  y: 100 },
+  { x: 740,  y: 100 },
+  { x: 1030, y: 100 },
+  { x: 1030, y: 420 },
+  { x: 740,  y: 420 },
+  { x: 450,  y: 420 },
+  { x: 160,  y: 420 },
+  { x: 160,  y: 740 },
+  { x: 450,  y: 740 },
 ];
 
 const AssamScrollJourney = () => {
@@ -89,7 +89,7 @@ const AssamScrollJourney = () => {
 
     const startPt = pathEl.getPointAtLength(0);
     if (boyRef.current) {
-      boyRef.current.setAttribute('transform', `translate(${startPt.x},${startPt.y}) scale(1,1)`);
+      boyRef.current.setAttribute('transform', `translate(${startPt.x},${startPt.y}) scale(0.65,0.65)`);
     }
   }, []);
 
@@ -106,7 +106,7 @@ const AssamScrollJourney = () => {
 
       if (prefersReducedMotion) {
         const startPt = pathEl.getPointAtLength(0);
-        boyEl.setAttribute('transform', `translate(${startPt.x},${startPt.y}) scale(1,1)`);
+        boyEl.setAttribute('transform', `translate(${startPt.x},${startPt.y}) scale(0.65,0.65)`);
         if (activeTrailRef.current) activeTrailRef.current.style.strokeDashoffset = '0';
         return;
       }
@@ -128,23 +128,24 @@ const AssamScrollJourney = () => {
           // Student position along serpentine path
           const currentDistance = progress * pathLength;
           const currentPoint = pathEl.getPointAtLength(currentDistance);
-          const d1 = Math.max(0, currentDistance - 5);
-          const d2 = Math.min(pathLength, currentDistance + 5);
+          const d1 = Math.max(0, currentDistance - 8);
+          const d2 = Math.min(pathLength, currentDistance + 8);
           const p1 = pathEl.getPointAtLength(d1);
           const p2 = pathEl.getPointAtLength(d2);
           const dx = p2.x - p1.x;
           const dy = p2.y - p1.y;
 
           // Flip horizontally when moving leftwards (Row 2)
-          const scaleX = dx < -0.1 ? -1 : 1;
+          const scaleFactor = 0.65;
+          const scaleX = dx < -0.1 ? -scaleFactor : scaleFactor;
           const rawAngle = Math.atan2(dy, Math.abs(dx) || 0.001) * (180 / Math.PI);
-          const gentleAngle = Math.max(-10, Math.min(10, rawAngle * 0.35));
+          const gentleAngle = Math.max(-15, Math.min(15, rawAngle * 0.3));
 
           boyEl.setAttribute('transform',
-            `translate(${currentPoint.x},${currentPoint.y}) rotate(${gentleAngle}) scale(${scaleX},1)`
+            `translate(${currentPoint.x},${currentPoint.y}) rotate(${gentleAngle}) scale(${scaleX},${scaleFactor})`
           );
 
-          // Parallax for lady, rhino, vegetation (subtle movement staying in frame)
+          // Parallax for lady, rhino, vegetation
           if (womanRef.current) gsap.set(womanRef.current, { y: (progress - 0.5) * -16, rotate: Math.sin(progress * 6) * 1.2 });
           if (rhinoRef.current) gsap.set(rhinoRef.current, { y: (progress - 0.5) * -12, rotate: Math.cos(progress * 5) * 0.8 });
           if (vegSlowRef.current) gsap.set(vegSlowRef.current, { y: progress * -20 });
@@ -173,23 +174,23 @@ const AssamScrollJourney = () => {
       ref={containerRef}
       id="journey"
       className="relative w-full bg-gradient-to-b from-[#faf8f5] via-[#f3ede3] to-[#faf8f5]"
-      style={{ height: '450vh' }}
+      style={{ height: '500vh' }}
     >
       <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-between pointer-events-none z-20">
 
         {/* ── HEADER (Top) ── */}
-        <div className="shrink-0 pt-16 sm:pt-20 px-4 text-center z-30 pointer-events-auto max-w-4xl mx-auto w-full">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-semibold mb-1 shadow-xs">
-            <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+        <div className="shrink-0 pt-14 sm:pt-16 px-4 text-center z-30 pointer-events-auto max-w-5xl mx-auto w-full">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-100/90 text-emerald-900 border border-emerald-300 text-xs font-bold mb-3 shadow-xs">
+            <Sparkles className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
             <span>Scroll-Driven State Innovation Odyssey</span>
           </div>
-          <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
             Follow the Student Journey Through Assam
           </h2>
-          <p className="text-xs text-slate-600 mt-0.5 max-w-2xl mx-auto hidden sm:block">
+          <p className="text-sm sm:text-base text-slate-600 mt-2 max-w-2xl mx-auto hidden sm:block leading-relaxed">
             Scroll down to watch our student innovator travel through tea gardens, knowledge camps, and zonal hackathons to the state final.
           </p>
-          <div className="w-full max-w-md mx-auto mt-2 h-1.5 bg-slate-200/80 rounded-full overflow-hidden p-0.5 border border-slate-300/60">
+          <div className="w-full max-w-lg mx-auto mt-3 h-2 bg-slate-200/80 rounded-full overflow-hidden border border-slate-300/60">
             <div
               className="h-full bg-gradient-to-r from-emerald-600 via-teal-500 to-amber-500 rounded-full transition-all duration-150"
               style={{ width: `${Math.min(100, Math.max(0, scrollProgress * 100))}%` }}
@@ -200,20 +201,20 @@ const AssamScrollJourney = () => {
         {/* ── BACKGROUND VEGETATION (Z-0) ── */}
         <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
           <div ref={vegSlowRef} className="absolute right-0 top-10 opacity-25">
-            <svg width="450" height="260" viewBox="0 0 450 260" className="translate-x-12">
+            <svg width="500" height="300" viewBox="0 0 450 260" className="translate-x-12">
               <path d="M 0,260 L 70,110 L 150,180 L 250,70 L 370,190 L 450,130 L 450,260 Z" fill="#7ba3b8" />
               <path d="M 100,260 L 190,140 L 290,210 L 450,120 L 450,260 Z" fill="#9dbfce" opacity="0.6" />
             </svg>
           </div>
           <div ref={vegMedRef} className="absolute right-0 top-1/3 opacity-30">
-            <svg width="460" height="320" viewBox="0 0 460 320" className="translate-x-16">
+            <svg width="500" height="360" viewBox="0 0 460 320" className="translate-x-16">
               <path d="M 0,320 Q 140,180 320,230 Q 390,250 460,210 L 460,320 Z" fill="#2d6a4f" opacity="0.8" />
               <circle cx="180" cy="230" r="24" fill="#52b788" opacity="0.7" /><circle cx="220" cy="225" r="28" fill="#40916c" opacity="0.8" />
               <circle cx="260" cy="240" r="26" fill="#2d6a4f" /><circle cx="310" cy="235" r="30" fill="#52b788" opacity="0.8" />
             </svg>
           </div>
           <div ref={vegFastRef} className="absolute -right-16 bottom-0 opacity-30">
-            <svg width="450" height="520" viewBox="0 0 450 520" className="overflow-visible">
+            <svg width="500" height="560" viewBox="0 0 450 520" className="overflow-visible">
               <defs><linearGradient id="leaf-grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#74c69d" /><stop offset="40%" stopColor="#40916c" /><stop offset="100%" stopColor="#1b4332" /></linearGradient></defs>
               <path d="M 200,520 C 150,390 80,290 20,220 C -10,180 60,130 140,160 C 240,200 380,300 450,520 Z" fill="url(#leaf-grad)" filter="drop-shadow(-8px -4px 18px rgba(15,41,66,0.15))" />
               <path d="M 200,520 Q 120,320 70,180" stroke="#a7f3d0" strokeWidth="4" fill="none" opacity="0.6" />
@@ -223,10 +224,10 @@ const AssamScrollJourney = () => {
         </div>
 
         {/* ── MIDDLE MAIN ROW (Lady - Serpentine Road/Card - Rhino) ── */}
-        <div className="flex-1 flex flex-row items-center justify-between px-2 sm:px-6 lg:px-12 w-full max-w-7xl mx-auto min-h-0 relative z-20 overflow-hidden gap-2">
+        <div className="flex-1 flex flex-row items-center justify-between px-2 sm:px-4 lg:px-8 w-full max-w-[1600px] mx-auto min-h-0 relative z-20 overflow-hidden gap-1 sm:gap-3">
 
           {/* LADY (Left) */}
-          <div ref={womanRef} className="shrink-0 w-24 sm:w-36 lg:w-44 pointer-events-none select-none z-20 self-end pb-2 sm:pb-6">
+          <div ref={womanRef} className="shrink-0 w-28 sm:w-40 lg:w-52 xl:w-60 pointer-events-none select-none z-20 self-end pb-2 sm:pb-6">
             <div className="relative">
               <div className="absolute -inset-4 bg-emerald-500/10 blur-2xl rounded-full" />
               <svg viewBox="0 0 300 450" className="w-full h-auto drop-shadow-2xl">
@@ -261,125 +262,136 @@ const AssamScrollJourney = () => {
                 </g>
                 <ellipse cx="160" cy="370" rx="60" ry="12" fill="#1b4332" opacity="0.4" />
               </svg>
-              <div className="mt-1 bg-white/90 backdrop-blur-md px-2 py-0.5 rounded-full border border-emerald-200/80 shadow-xs text-center">
-                <span className="text-[9px] sm:text-[10px] font-bold text-emerald-950">Tea Garden Heritage</span>
+              <div className="mt-1 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full border border-emerald-200/80 shadow-xs text-center">
+                <span className="text-[10px] sm:text-xs font-bold text-emerald-950">Tea Garden Heritage</span>
               </div>
             </div>
           </div>
 
           {/* ROAD + CARD (Center) */}
-          <div className="flex-1 flex flex-col items-center justify-center min-w-0 max-w-2xl mx-auto px-1 sm:px-4 h-full pointer-events-none">
+          <div className="flex-1 flex flex-col items-center justify-center min-w-0 mx-auto px-0 h-full pointer-events-none">
 
-            {/* Serpentine SVG */}
+            {/* Serpentine SVG — Full Journey page scale */}
             <div className="relative w-full flex items-center justify-center">
               <svg
-                viewBox="0 0 800 380"
-                className="w-full h-auto max-h-[36vh] sm:max-h-[42vh] overflow-visible"
+                viewBox="0 0 1200 940"
+                className="w-full h-auto max-h-[50vh] sm:max-h-[55vh] overflow-visible"
                 aria-label="Assam Innovation Serpentine Road"
               >
                 <defs>
                   <linearGradient id="hp-road-base" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#f1ece4" /><stop offset="100%" stopColor="#e5ded2" /></linearGradient>
                   <linearGradient id="hp-active-gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#059669" /><stop offset="50%" stopColor="#10b981" /><stop offset="100%" stopColor="#f59e0b" /></linearGradient>
-                  <linearGradient id="hp-boy-shirt" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#1d4ed8" /><stop offset="100%" stopColor="#1e3a8a" /></linearGradient>
-                  <linearGradient id="hp-boy-skin" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#fcd34d" /><stop offset="100%" stopColor="#d4a373" /></linearGradient>
-                  <filter id="hp-road-shadow" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="4" stdDeviation="5" floodColor="#0f172a" floodOpacity="0.08" /></filter>
-                  <filter id="hp-active-glow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="0" stdDeviation="5" floodColor="#10b981" floodOpacity="0.55" /></filter>
+                  <linearGradient id="hp-boy-shirt" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#0284c7" /><stop offset="100%" stopColor="#0369a1" /></linearGradient>
+                  <linearGradient id="hp-boy-skin" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#fed7aa" /><stop offset="100%" stopColor="#f59e0b" /></linearGradient>
+                  <filter id="hp-road-shadow" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="6" stdDeviation="6" floodColor="#0f172a" floodOpacity="0.07" /></filter>
+                  <filter id="hp-active-glow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#10b981" floodOpacity="0.55" /></filter>
                 </defs>
 
-                {/* Road layers */}
-                <path d={SERP_PATH} fill="none" stroke="url(#hp-road-base)" strokeWidth="52" strokeLinecap="round" filter="url(#hp-road-shadow)" />
-                <path d={SERP_PATH} fill="none" stroke="#ffffff" strokeWidth="40" strokeLinecap="round" opacity="0.95" />
+                {/* Road layers — matching Journey page stroke widths */}
+                <path d={SERP_PATH} fill="none" stroke="url(#hp-road-base)" strokeWidth="56" strokeLinecap="round" filter="url(#hp-road-shadow)" />
+                <path d={SERP_PATH} fill="none" stroke="#ffffff" strokeWidth="42" strokeLinecap="round" opacity="0.95" />
                 <path ref={pathRef} id="hp-master-path" d={SERP_PATH} fill="none" stroke="#cbd5e1" strokeWidth="5" strokeDasharray="10 8" strokeLinecap="round" />
-                <path ref={activeTrailRef} id="hp-active-trail" d={SERP_PATH} fill="none" stroke="url(#hp-active-gradient)" strokeWidth="10" strokeLinecap="round" filter="url(#hp-active-glow)" />
+                <path ref={activeTrailRef} id="hp-active-trail" d={SERP_PATH} fill="none" stroke="url(#hp-active-gradient)" strokeWidth="12" strokeLinecap="round" filter="url(#hp-active-glow)" />
 
                 {/* Bend arrows */}
-                <g transform="translate(756, 140) rotate(90)" opacity="0.55">
-                  <path d="M -5,-5 L 0,0 L 5,-5" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" />
-                  <path d="M -5,3 L 0,8 L 5,3" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" />
+                <g transform="translate(1145, 260) rotate(90)" opacity="0.6">
+                  <path d="M -6,-6 L 0,0 L 6,-6" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" />
+                  <path d="M -6,2 L 0,8 L 6,2" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" />
                 </g>
-                <g transform="translate(22, 255) rotate(90)" opacity="0.55">
-                  <path d="M -5,-5 L 0,0 L 5,-5" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" />
-                  <path d="M -5,3 L 0,8 L 5,3" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" />
+                <g transform="translate(55, 580) rotate(90)" opacity="0.6">
+                  <path d="M -6,-6 L 0,0 L 6,-6" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" />
+                  <path d="M -6,2 L 0,8 L 6,2" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" />
                 </g>
 
-                {/* Checkpoint nodes */}
+                {/* Checkpoint nodes — matching Journey page node sizes */}
                 {nodePositions.map((pos, idx) => {
                   const isActive = activeStepIndex >= idx;
                   const isCurrent = activeStepIndex === idx;
                   const stepStr = STAGES[idx]?.step || String(idx + 1).padStart(2, '0');
                   return (
                     <g key={stepStr} className="transition-all duration-300">
-                      {isCurrent && <circle cx={pos.x} cy={pos.y} r="26" fill="#10b981" opacity="0.22" className="animate-ping" />}
-                      <circle cx={pos.x} cy={pos.y} r={isCurrent ? 20 : isActive ? 16 : 12} fill={isCurrent ? '#f59e0b' : isActive ? '#10b981' : '#94a3b8'} opacity={isCurrent ? 0.9 : isActive ? 0.75 : 0.4} />
-                      <circle cx={pos.x} cy={pos.y} r={isCurrent ? 13 : isActive ? 10 : 8} fill={isCurrent ? '#064e3b' : isActive ? '#065f46' : '#475569'} stroke="#ffffff" strokeWidth="2" />
-                      <text x={pos.x} y={pos.y + 3} textAnchor="middle" fill="#ffffff" fontSize={stepStr.length > 2 ? '6' : '7.5'} fontWeight="bold" fontFamily="sans-serif">{stepStr}</text>
+                      {isCurrent && <circle cx={pos.x} cy={pos.y} r="32" fill="#10b981" opacity="0.22" className="animate-ping" />}
+                      <circle cx={pos.x} cy={pos.y} r={isCurrent ? 24 : isActive ? 19 : 15} fill={isCurrent ? '#f59e0b' : isActive ? '#10b981' : '#94a3b8'} opacity={isCurrent ? 0.9 : isActive ? 0.75 : 0.4} />
+                      <circle cx={pos.x} cy={pos.y} r={isCurrent ? 15 : isActive ? 12 : 9} fill={isCurrent ? '#064e3b' : isActive ? '#065f46' : '#475569'} stroke="#ffffff" strokeWidth="2.5" />
+                      <text x={pos.x} y={pos.y + 4} textAnchor="middle" fill="#ffffff" fontSize={stepStr.length > 2 ? '8' : '9'} fontWeight="bold" fontFamily="sans-serif">{stepStr}</text>
                     </g>
                   );
                 })}
 
                 {/* Student traveler */}
                 <g ref={boyRef} id="hp-student-traveler" className="will-change-transform" style={{ transformOrigin: '0px 0px' }}>
-                  <ellipse cx="0" cy="-1" rx="14" ry="4.5" fill="#0f172a" opacity="0.3" />
-                  <g transform="translate(0, -5) scale(0.55)">
+                  {/* Shadow */}
+                  <ellipse cx="0" cy="-2" rx="18" ry="6" fill="#0f172a" opacity="0.3" />
+                  {/* Character Body */}
+                  <g transform="translate(0, -6)">
+                    {/* Backpack */}
                     <rect x="-18" y="-48" width="12" height="24" rx="4" fill="#f59e0b" stroke="#b45309" strokeWidth="1.5" />
                     <path d="M -16,-42 Q -22,-30 -16,-20" stroke="#b45309" strokeWidth="2" fill="none" />
+                    {/* Legs */}
                     <path d="M -6,-20 L -10,0" stroke="#1e293b" strokeWidth="6" strokeLinecap="round" />
                     <path d="M 6,-20 L 10,-2" stroke="#334155" strokeWidth="6" strokeLinecap="round" />
+                    {/* Shoes */}
                     <path d="M -14,0 L -6,0" stroke="#0f172a" strokeWidth="5" strokeLinecap="round" />
                     <path d="M 6,-2 L 14,-2" stroke="#0f172a" strokeWidth="5" strokeLinecap="round" />
+                    {/* Torso & Uniform */}
                     <path d="M -12,-52 L 12,-52 L 10,-20 L -10,-20 Z" fill="url(#hp-boy-shirt)" />
                     <polygon points="0,-48 -5,-52 5,-52" fill="#ffffff" />
                     <polygon points="-1,-48 1,-48 2,-32 0,-28 -2,-32" fill="#dc2626" />
+                    {/* Arms */}
                     <path d="M -12,-46 Q -18,-34 -8,-28" stroke="url(#hp-boy-skin)" strokeWidth="4.5" strokeLinecap="round" fill="none" />
                     <path d="M 12,-46 Q 18,-34 8,-28" stroke="url(#hp-boy-skin)" strokeWidth="4.5" strokeLinecap="round" fill="none" />
                     <rect x="2" y="-34" width="12" height="15" rx="2" fill="#ffffff" stroke="#2563eb" strokeWidth="1.5" transform="rotate(12, 8, -26)" />
+                    {/* Head */}
                     <circle cx="0" cy="-62" r="11" fill="url(#hp-boy-skin)" />
                     <path d="M -10,-65 C -10,-76 10,-76 10,-65 C 6,-72 -6,-72 -10,-65 Z" fill="#1e1b18" />
                     <circle cx="-3" cy="-63" r="1.5" fill="#0f172a" />
                     <circle cx="4" cy="-63" r="1.5" fill="#0f172a" />
                     <path d="M -2,-58 Q 0,-55 3,-58" stroke="#b45309" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+                    {/* Badge */}
                     <g transform="translate(0, -82)">
-                      <rect x="-34" y="-8" width="68" height="15" rx="7.5" fill="#064e3b" stroke="#10b981" strokeWidth="1" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.25))" />
-                      <text x="0" y="3" textAnchor="middle" fill="#fcd34d" fontSize="7.5" fontWeight="bold">Young Innovator</text>
+                      <rect x="-36" y="-8" width="72" height="16" rx="8" fill="#064e3b" stroke="#10b981" strokeWidth="1.2" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.25))" />
+                      <text x="0" y="3.5" textAnchor="middle" fill="#fcd34d" fontSize="7.5" fontWeight="bold">Young Innovator</text>
                     </g>
                   </g>
                 </g>
               </svg>
             </div>
 
-            {/* Active Stage Info Card */}
-            <div className="pointer-events-auto mt-2 sm:mt-3 w-full max-w-xs sm:max-w-sm mx-auto">
+            {/* Active Stage Info Card — Larger, matching Journey page card style */}
+            <div className="pointer-events-auto mt-3 sm:mt-4 w-full max-w-sm sm:max-w-md lg:max-w-lg mx-auto">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeStage.step}
-                  initial={{ opacity: 0, y: 6 }}
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
+                  exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.22 }}
-                  className="bg-white/95 backdrop-blur-md rounded-2xl border border-emerald-200/80 shadow-lg p-3 sm:p-3.5"
+                  className="bg-white/95 backdrop-blur-md rounded-2xl border-2 border-emerald-600/30 shadow-lg p-4 sm:p-5"
                 >
-                  <div className="flex items-center justify-between gap-2 mb-1 sm:mb-1.5">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-base sm:text-lg font-black text-emerald-800 tracking-tight leading-none">{activeStage.step}</span>
-                      <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-100/80 text-emerald-900 border border-emerald-300/60">{activeStage.category}</span>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="w-9 h-9 rounded-xl bg-emerald-900 text-amber-300 font-black text-sm flex items-center justify-center shadow-xs shrink-0">
+                        {activeStage.step}
+                      </span>
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-100/80 text-emerald-900 border border-emerald-300/60">{activeStage.category}</span>
                       {activeStage.offline && (
-                        <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-0.5">
-                          <MapPin className="w-2 h-2" />OFFLINE
+                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-0.5">
+                          <MapPin className="w-2.5 h-2.5" />OFFLINE
                         </span>
                       )}
                       {activeStage.highlightBadge && (
-                        <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-0.5">
-                          <Trophy className="w-2 h-2 text-amber-600" />{activeStage.highlightBadge}
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-300 text-slate-950 flex items-center gap-0.5">
+                          <Trophy className="w-2.5 h-2.5 text-amber-700" />{activeStage.highlightBadge}
                         </span>
                       )}
                     </div>
-                    <span className="text-[9px] font-semibold text-amber-700 flex items-center gap-0.5 shrink-0">
-                      <Calendar className="w-2.5 h-2.5" />
+                    <span className="text-[10px] font-semibold text-amber-700 flex items-center gap-1 shrink-0 bg-amber-50 px-2 py-1 rounded-full border border-amber-200">
+                      <Calendar className="w-3 h-3" />
                       {activeStage.date.split(',')[0]}
                     </span>
                   </div>
-                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 leading-snug">{activeStage.title}</h3>
-                  <p className="mt-1 text-[10px] text-slate-500 leading-relaxed line-clamp-2">{activeStage.desc}</p>
+                  <h3 className="text-sm sm:text-base font-black text-slate-900 leading-snug">{activeStage.title}</h3>
+                  <p className="mt-1.5 text-xs sm:text-sm text-slate-500 leading-relaxed line-clamp-2">{activeStage.desc}</p>
                 </motion.div>
               </AnimatePresence>
             </div>
@@ -387,7 +399,7 @@ const AssamScrollJourney = () => {
           </div>
 
           {/* RHINO (Right) */}
-          <div ref={rhinoRef} className="shrink-0 w-28 sm:w-44 lg:w-56 pointer-events-none select-none z-20 self-end pb-2 sm:pb-6">
+          <div ref={rhinoRef} className="shrink-0 w-32 sm:w-48 lg:w-60 xl:w-72 pointer-events-none select-none z-20 self-end pb-2 sm:pb-6">
             <div className="relative">
               <svg viewBox="0 0 360 260" className="w-full h-auto drop-shadow-2xl overflow-visible">
                 <defs>
@@ -433,8 +445,8 @@ const AssamScrollJourney = () => {
                   <circle cx="50" cy="148" r="3" fill="#f59e0b" opacity="0.8" /><circle cx="156" cy="138" r="3" fill="#f59e0b" opacity="0.8" /><circle cx="312" cy="128" r="3.5" fill="#f59e0b" opacity="0.8" />
                 </g>
               </svg>
-              <div className="mt-1 bg-white/95 backdrop-blur-md px-2 py-0.5 rounded-full border border-emerald-300 shadow-xs text-center">
-                <span className="text-[9px] sm:text-[10px] font-bold text-emerald-950 flex items-center justify-center gap-1">
+              <div className="mt-1 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full border border-emerald-300 shadow-xs text-center">
+                <span className="text-[10px] sm:text-xs font-bold text-emerald-950 flex items-center justify-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
                   <span>One-Horned Rhinoceros</span>
                 </span>

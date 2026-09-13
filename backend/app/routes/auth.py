@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import Blueprint, request
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, get_jwt
 from app.utils.db import get_db, parse_object_id, serialize_doc
@@ -6,6 +6,11 @@ from app.utils.helpers import api_response, api_error, verify_password, hash_pas
 from app.utils.audit import log_audit_event
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/api/v1/auth")
+
+# Defined roles supported in AFIP RBAC
+ALLOWED_ROLES = [
+    "admin", "school", "mentor", "evaluator", "district", "jury", "state_jury", "student"
+]
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
@@ -25,18 +30,27 @@ def login():
     if not verify_password(password, user.get("password_hash", "")):
         return api_error("INVALID_CREDENTIALS", "Invalid email or password.", status_code=401)
 
-    role = user.get("role")
-    if target_role and target_role != role:
-        return api_error("ROLE_MISMATCH", f"This account is registered as a {role}, not as {target_role}.", status_code=403)
+    role = str(user.get("role", "")).lower()
+    if target_role:
+        target_role_clean = str(target_role).strip().lower()
+        if target_role_clean != role:
+            return api_error("ROLE_MISMATCH", f"This account is registered as a {role}, not as {target_role}.", status_code=403)
 
-    if user.get("status") == "pending":
+    user_status = str(user.get("status", "active")).lower()
+    if user_status == "pending":
         return api_error("ACCOUNT_PENDING", "Your account registration is currently pending administrative review.", status_code=403)
-    elif user.get("status") in ["rejected", "suspended"]:
-        return api_error("ACCOUNT_SUSPENDED", f"Your account has been {user.get('status')}. Please contact administration.", status_code=403)
+    elif user_status in ["rejected", "suspended", "deactivated"]:
+        rejection_note = f" Reason: {user.get('rejection_reason')}" if user.get("rejection_reason") else ""
+        return api_error("ACCOUNT_SUSPENDED", f"Your account status is '{user_status}'.{rejection_note} Please contact administration.", status_code=403)
+
+    user_id_str = str(user["_id"])
+    now = datetime.now(timezone.utc)
+
+    # Update last_login timestamp
+    db.users.update_one({"_id": user["_id"]}, {"$set": {"last_login": now, "updated_at": now}})
 
     # Fetch associated role profile
     profile_data = {}
-    user_id_str = str(user["_id"])
     if role == "school":
         school = db.schools.find_one({"user_id": user["_id"]})
         if school:
@@ -57,12 +71,45 @@ def login():
         evaluator = db.evaluators.find_one({"user_id": user["_id"]})
         if evaluator:
             profile_data["evaluator"] = serialize_doc(evaluator)
+    elif role == "mentor":
+        mentor = db.mentors.find_one({"user_id": user["_id"]})
+        if mentor:
+            m_doc = serialize_doc(mentor)
+            if mentor.get("school_id"):
+                school = db.schools.find_one({"_id": mentor["school_id"]})
+                if school:
+                    m_doc["school"] = serialize_doc(school)
+            profile_data["mentor"] = m_doc
+    elif role == "district":
+        district_name = user.get("district") or "Kamrup"
+        from app.utils.helpers import generate_district_id
+        profile_data["district"] = {
+            "district_name": district_name,
+            "district_id": generate_district_id(district_name),
+            "state": "Assam"
+        }
+    elif role == "jury":
+        profile_data["jury"] = {
+            "jury_id": user.get("user_id") or f"AFIP-JUR-{str(user['_id'])[-6:].upper()}",
+            "name": user.get("name"),
+            "email": user.get("email"),
+            "role": "jury"
+        }
+    elif role == "state_jury":
+        profile_data["state_jury"] = {
+            "state_jury_id": user.get("user_id") or f"AFIP-STJ-{str(user['_id'])[-6:].upper()}",
+            "name": user.get("name"),
+            "email": user.get("email"),
+            "role": "state_jury",
+            "panel": "State Grand Jury & Awards Council"
+        }
 
     # Create JWT
     additional_claims = {
         "role": role,
         "email": email,
-        "name": user.get("name", "")
+        "name": user.get("name", ""),
+        "district": user.get("district", "")
     }
     access_token = create_access_token(identity=user_id_str, additional_claims=additional_claims)
 
@@ -72,14 +119,29 @@ def login():
         "token": access_token,
         "user": {
             "id": user_id_str,
+            "user_id": user.get("user_id") or user_id_str,
             "email": user["email"],
             "name": user.get("name", ""),
+            "phone": user.get("phone", ""),
             "role": role,
-            "status": user.get("status", "active")
+            "district": user.get("district", ""),
+            "status": user.get("status", "active"),
+            "last_login": now.isoformat(),
+            "is_verified": user.get("is_verified", True if role == "admin" else False)
         },
         **profile_data
     }
     return api_response(data=response_data, message="Login successful")
+
+@auth_bp.route("/logout", methods=["POST"])
+@jwt_required(optional=True)
+def logout():
+    user_id = get_jwt_identity()
+    claims = get_jwt() or {}
+    role = claims.get("role", "user")
+    if user_id:
+        log_audit_event(user_id, role, "USER_LOGOUT", "users", user_id)
+    return api_response(data=None, message="Logged out successfully.")
 
 @auth_bp.route("/me", methods=["GET"])
 @jwt_required()
@@ -112,14 +174,50 @@ def get_current_user():
         evaluator = db.evaluators.find_one({"user_id": user["_id"]})
         if evaluator:
             profile_data["evaluator"] = serialize_doc(evaluator)
+    elif role == "mentor":
+        mentor = db.mentors.find_one({"user_id": user["_id"]})
+        if mentor:
+            m_doc = serialize_doc(mentor)
+            if mentor.get("school_id"):
+                school = db.schools.find_one({"_id": mentor["school_id"]})
+                if school:
+                    m_doc["school"] = serialize_doc(school)
+            profile_data["mentor"] = m_doc
+    elif role == "district":
+        district_name = user.get("district") or "Kamrup"
+        from app.utils.helpers import generate_district_id
+        profile_data["district"] = {
+            "district_name": district_name,
+            "district_id": generate_district_id(district_name),
+            "state": "Assam"
+        }
+    elif role == "jury":
+        profile_data["jury"] = {
+            "jury_id": user.get("user_id") or f"AFIP-JUR-{str(user['_id'])[-6:].upper()}",
+            "name": user.get("name"),
+            "email": user.get("email"),
+            "role": "jury"
+        }
+    elif role == "state_jury":
+        profile_data["state_jury"] = {
+            "state_jury_id": user.get("user_id") or f"AFIP-STJ-{str(user['_id'])[-6:].upper()}",
+            "name": user.get("name"),
+            "email": user.get("email"),
+            "role": "state_jury",
+            "panel": "State Grand Jury & Awards Council"
+        }
 
     user_info = {
         "id": str(user["_id"]),
+        "user_id": user.get("user_id") or str(user["_id"]),
         "email": user["email"],
         "name": user.get("name", ""),
+        "phone": user.get("phone", ""),
         "role": role,
         "status": user.get("status", "active"),
-        "created_at": user.get("created_at")
+        "created_at": user.get("created_at"),
+        "last_login": user.get("last_login"),
+        "is_verified": user.get("is_verified", True if role == "admin" else False)
     }
 
     return api_response(data={"user": user_info, **profile_data})

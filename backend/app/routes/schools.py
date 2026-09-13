@@ -1,11 +1,11 @@
-import re
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.utils.db import get_db, parse_object_id, serialize_doc
-from app.utils.helpers import api_response, api_error, hash_password
+from app.utils.helpers import api_response, api_error, hash_password, generate_school_id, generate_user_id, generate_mentor_id, generate_student_id
 from app.middleware.auth_middleware import role_required
 from app.utils.audit import log_audit_event
+from app.services.udise_service import UDISEVerificationService
 
 schools_bp = Blueprint("schools", __name__, url_prefix="/api/v1/schools")
 
@@ -33,10 +33,9 @@ def register_school():
 
     # Validation
     required_fields = [
-        "school_name", "udise_school_id", "school_type", "board", "district", "pin_code",
-        "official_email", "official_phone", "principal_name", "principal_email",
-        "principal_phone", "coordinator_name", "coordinator_email",
-        "coordinator_phone", "password", "confirm_password"
+        "school_name", "udise_school_id", "school_type", "district", "pin_code",
+        "official_email", "official_phone", "principal_name",
+        "password", "confirm_password"
     ]
     missing = [f for f in required_fields if not data.get(f)]
     if missing:
@@ -50,14 +49,17 @@ def register_school():
     if len(password) < 8:
         return api_error("WEAK_PASSWORD", "Password must be at least 8 characters in length.", status_code=400)
 
-    # Mandatory UDISE format check: exactly 11 digits starting with Assam state code 18
+    # Mandatory UDISE format check via UDISEVerificationService
     udise = str(data.get("udise_school_id", "")).strip()
-    if not re.match(r"^18\d{9}$", udise):
+    is_valid_udise, udise_err = UDISEVerificationService.validate_format(udise)
+    if not is_valid_udise:
         return api_error(
             "INVALID_UDISE",
-            "Please enter a valid 11-digit UDISE School ID for Assam (must start with state code '18').",
+            udise_err or "Please enter a valid 11-digit UDISE School ID for Assam (must start with state code '18').",
             status_code=400
         )
+
+    verification_result = UDISEVerificationService.verify_school_udise(udise, data.get("school_name", ""), district)
 
     db = get_db()
 
@@ -69,34 +71,50 @@ def register_school():
     if db.users.find_one({"email": email}):
         return api_error("DUPLICATE_EMAIL", "A school account with this official email already exists.", status_code=409)
 
+    now = datetime.now(timezone.utc)
+    total_users_count = db.users.count_documents({}) + 1
+    user_custom_id = generate_user_id("school", total_users_count)
+
     # Create user with status 'pending'
-    now = datetime.utcnow()
     user_doc = {
+        "user_id": user_custom_id,
         "email": email,
+        "phone": data.get("official_phone", "").strip(),
         "password_hash": hash_password(password),
         "role": "school",
         "name": data["school_name"].strip(),
         "status": "pending",
+        "is_verified": False,
+        "last_login": None,
         "created_at": now,
         "updated_at": now
     }
     user_result = db.users.insert_one(user_doc)
     user_id = user_result.inserted_id
 
+    # Server-generated unique School ID (e.g. AFIP-SCH-000001)
+    school_count = db.schools.count_documents({}) + 1
+    unique_school_id = generate_school_id(school_count)
+    while db.schools.find_one({"school_custom_id": unique_school_id}):
+        school_count += 1
+        unique_school_id = generate_school_id(school_count)
+
     # Create school document with UDISE verification status
     school_doc = {
         "user_id": user_id,
+        "school_custom_id": unique_school_id,
         "school_name": data["school_name"].strip(),
         "udise_school_id": udise,
-        "udise_verification_status": "format_valid",
+        "udise_verification_status": verification_result.get("status", "format_valid"),
         "udise_verified_at": None,
         "udise_verified_by": None,
-        "udise_verification_source": "Format Validation & Institutional Manual Review",
+        "udise_verification_source": verification_result.get("verified_source", "Format Validation (Prefix 18 Check)"),
         "school_type": data.get("school_type", "Government Model School"),
         "board": data.get("board", "SEBA"),
-        "address_line_1": data.get("address_line_1", "").strip(),
-        "address_line_2": data.get("address_line_2", "").strip(),
         "district": district,
+        "block": data.get("block", "").strip() or data.get("address_line_2", "").strip() or "Central Block",
+        "address_line_1": data.get("address_line_1", "").strip() or data.get("address", "").strip(),
+        "address_line_2": data.get("address_line_2", "").strip(),
         "state": "Assam",
         "pin_code": data.get("pin_code", "").strip(),
         "official_email": email,
@@ -104,17 +122,18 @@ def register_school():
         "website": data.get("website", "").strip(),
         "principal": {
             "name": data.get("principal_name", "").strip(),
-            "email": data.get("principal_email", "").strip(),
-            "phone": data.get("principal_phone", "").strip()
+            "email": data.get("principal_email", "").strip() or email,
+            "phone": data.get("principal_phone", "").strip() or data.get("official_phone", "").strip()
         },
         "coordinator": {
-            "name": data.get("coordinator_name", "").strip(),
-            "email": data.get("coordinator_email", "").strip(),
-            "phone": data.get("coordinator_phone", "").strip(),
+            "name": data.get("coordinator_name", "").strip() or data.get("principal_name", "").strip(),
+            "email": data.get("coordinator_email", "").strip() or email,
+            "phone": data.get("coordinator_phone", "").strip() or data.get("official_phone", "").strip(),
             "designation": data.get("coordinator_designation", "Innovation Mentor")
         },
-        "school_code": None,  # Generated only upon admin approval
+        "school_code": None,  # Generated upon admin approval
         "status": "pending",
+        "rejection_reason": None,
         "created_at": now,
         "updated_at": now
     }
@@ -131,10 +150,18 @@ def register_school():
         "created_at": now
     })
 
-    log_audit_event(str(user_id), "school", "SCHOOL_REGISTERED", "schools", str(school_result.inserted_id), {"udise": udise})
+    log_audit_event(
+        str(user_id), "school", "SCHOOL_REGISTERED", "schools", str(school_result.inserted_id),
+        {"udise": udise, "school_id": unique_school_id, "district": district}
+    )
 
     return api_response(
-        data={"school_id": str(school_result.inserted_id), "udise_school_id": udise, "status": "pending"},
+        data={
+            "school_id": str(school_result.inserted_id),
+            "school_custom_id": unique_school_id,
+            "udise_school_id": udise,
+            "status": "pending"
+        },
         message="Registration submitted successfully. Your application is under review by the administration.",
         status_code=201
     )
@@ -187,3 +214,361 @@ def get_school_teams():
         enriched.append(team_doc)
 
     return api_response(data=enriched)
+
+@schools_bp.route("/mentors", methods=["GET"])
+@role_required("school")
+def get_school_mentors():
+    user_id = get_jwt_identity()
+    db = get_db()
+    school = db.schools.find_one({"user_id": parse_object_id(user_id)})
+    if not school:
+        return api_error("NOT_FOUND", "School not found.", status_code=404)
+
+    mentors = list(db.mentors.find({"school_id": school["_id"]}).sort("created_at", -1))
+    enriched = []
+    for m in mentors:
+        m_doc = serialize_doc(m)
+        # Count teams assigned to this mentor
+        teams_assigned = list(db.teams.find({"mentor_id": m["_id"]}, {"team_name": 1, "team_code": 1, "team_custom_id": 1, "category": 1}))
+        m_doc["assigned_teams_count"] = len(teams_assigned)
+        m_doc["assigned_teams"] = serialize_doc(teams_assigned)
+        enriched.append(m_doc)
+
+    return api_response(data=enriched)
+
+@schools_bp.route("/mentors", methods=["POST"])
+@role_required("school")
+def create_school_mentor():
+    user_id = get_jwt_identity()
+    db = get_db()
+    school = db.schools.find_one({"user_id": parse_object_id(user_id)})
+    if not school:
+        return api_error("NOT_FOUND", "School not found.", status_code=404)
+
+    if school.get("status") != "approved":
+        return api_error("FORBIDDEN", "Only approved schools can create and onboard mentors.", status_code=403)
+
+    data = request.get_json() or {}
+    name = data.get("name", "").strip()
+    email = data.get("email", "").strip().lower()
+    phone = data.get("phone", "").strip()
+    designation = data.get("designation", "Innovation Mentor").strip()
+    password = data.get("password") or "Mentor@123"
+
+    if not name or not email:
+        return api_error("VALIDATION_ERROR", "Mentor name and email are required.", status_code=400)
+
+    # Check duplicate email
+    if db.users.find_one({"email": email}):
+        return api_error("DUPLICATE_EMAIL", "A user account with this email already exists.", status_code=409)
+
+    now = datetime.now(timezone.utc)
+
+    # Server-generated unique Mentor ID (e.g. AFIP-MEN-000123)
+    mentor_count = db.mentors.count_documents({}) + 1
+    mentor_custom_id = generate_mentor_id(mentor_count)
+    while db.mentors.find_one({"mentor_custom_id": mentor_custom_id}):
+        mentor_count += 1
+        mentor_custom_id = generate_mentor_id(mentor_count)
+
+    # Create user record
+    total_users_count = db.users.count_documents({}) + 1
+    user_custom_id = generate_user_id("mentor", total_users_count)
+    user_doc = {
+        "user_id": user_custom_id,
+        "email": email,
+        "phone": phone,
+        "password_hash": hash_password(password),
+        "role": "mentor",
+        "name": name,
+        "district": school.get("district", ""),
+        "status": "active",
+        "is_verified": True,
+        "last_login": None,
+        "created_at": now,
+        "updated_at": now
+    }
+    user_res = db.users.insert_one(user_doc)
+    m_user_id = user_res.inserted_id
+
+    # Create mentor record
+    mentor_doc = {
+        "user_id": m_user_id,
+        "mentor_custom_id": mentor_custom_id,
+        "school_id": school["_id"],
+        "school_name": school.get("school_name", ""),
+        "district": school.get("district", ""),
+        "full_name": name,
+        "email": email,
+        "phone": phone,
+        "designation": designation,
+        "status": "active",
+        "created_at": now,
+        "updated_at": now
+    }
+    mentor_res = db.mentors.insert_one(mentor_doc)
+    mentor_id = mentor_res.inserted_id
+
+    # In-app notification for mentor
+    db.notifications.insert_one({
+        "recipient_role": "mentor",
+        "recipient_id": m_user_id,
+        "title": "Welcome to Assam Future Innovation Program",
+        "message": f"You have been onboarded as an Innovation Mentor for '{school.get('school_name')}'.",
+        "type": "welcome",
+        "is_read": False,
+        "created_at": now
+    })
+
+    log_audit_event(
+        str(user_id), "school", "MENTOR_CREATED", "mentors", str(mentor_id),
+        {"mentor_id": mentor_custom_id, "school_id": str(school["_id"]), "name": name, "email": email}
+    )
+
+    return api_response(
+        data={
+            "mentor_id": str(mentor_id),
+            "mentor_custom_id": mentor_custom_id,
+            "name": name,
+            "email": email,
+            "designation": designation
+        },
+        message=f"Mentor '{name}' created successfully with ID {mentor_custom_id}.",
+        status_code=201
+    )
+
+@schools_bp.route("/students", methods=["GET"])
+@role_required("school")
+def get_school_students():
+    user_id = get_jwt_identity()
+    db = get_db()
+    school = db.schools.find_one({"user_id": parse_object_id(user_id)})
+    if not school:
+        return api_error("NOT_FOUND", "School not found.", status_code=404)
+
+    students = list(db.students.find({"school_id": school["_id"]}).sort("created_at", -1))
+    enriched = []
+    for s in students:
+        s_doc = serialize_doc(s)
+        if s.get("team_id"):
+            team = db.teams.find_one({"_id": s["team_id"]}, {"team_name": 1, "team_code": 1, "team_custom_id": 1, "category": 1})
+            s_doc["team"] = serialize_doc(team) if team else None
+        else:
+            s_doc["team"] = None
+        enriched.append(s_doc)
+
+    return api_response(data=enriched)
+
+@schools_bp.route("/students", methods=["POST"])
+@role_required("school")
+def add_school_student():
+    user_id = get_jwt_identity()
+    db = get_db()
+    school = db.schools.find_one({"user_id": parse_object_id(user_id)})
+    if not school:
+        return api_error("NOT_FOUND", "School not found.", status_code=404)
+
+    if school.get("status") != "approved":
+        return api_error("FORBIDDEN", "Only approved schools can register student innovators.", status_code=403)
+
+    data = request.get_json() or {}
+    name = data.get("name", "").strip()
+    email = data.get("email", "").strip().lower()
+    grade = data.get("grade", "").strip()
+    phone = data.get("phone", "").strip()
+    gender = data.get("gender", "")
+    age = data.get("age")
+    team_id_str = data.get("team_id")
+
+    if not name:
+        return api_error("VALIDATION_ERROR", "Student name is required.", status_code=400)
+
+    now = datetime.now(timezone.utc)
+
+    # Server-generated unique Student ID (e.g. AFIP-STU-000123)
+    student_count = db.students.count_documents({}) + 1
+    student_custom_id = generate_student_id(student_count)
+    while db.students.find_one({"student_custom_id": student_custom_id}):
+        student_count += 1
+        student_custom_id = generate_student_id(student_count)
+
+    # Optional user account creation if email provided
+    s_user_id = None
+    if email:
+        existing_u = db.users.find_one({"email": email})
+        if not existing_u:
+            total_users_count = db.users.count_documents({}) + 1
+            user_custom_id = generate_user_id("student", total_users_count)
+            user_res = db.users.insert_one({
+                "user_id": user_custom_id,
+                "email": email,
+                "phone": phone,
+                "password_hash": hash_password(data.get("password") or "Student@123"),
+                "role": "student",
+                "name": name,
+                "district": school.get("district", ""),
+                "status": "active",
+                "is_verified": True,
+                "last_login": None,
+                "created_at": now,
+                "updated_at": now
+            })
+            s_user_id = user_res.inserted_id
+        else:
+            s_user_id = existing_u["_id"]
+
+    team_oid = parse_object_id(team_id_str) if team_id_str else None
+    if team_oid:
+        team = db.teams.find_one({"_id": team_oid, "school_id": school["_id"]})
+        if not team:
+            return api_error("VALIDATION_ERROR", "Selected team does not exist or does not belong to this school.", status_code=400)
+        # Check team size limit (configurable max 5)
+        current_members = db.students.count_documents({"team_id": team_oid})
+        if current_members >= 5:
+            return api_error("LIMIT_EXCEEDED", "Team size limit reached (Maximum 5 students per team).", status_code=400)
+
+    student_doc = {
+        "student_custom_id": student_custom_id,
+        "user_id": s_user_id,
+        "school_id": school["_id"],
+        "district": school.get("district", ""),
+        "team_id": team_oid,
+        "full_name": name,
+        "email": email,
+        "phone": phone,
+        "grade": grade,
+        "gender": gender,
+        "age": age,
+        "is_leader": False,
+        "created_at": now,
+        "updated_at": now
+    }
+    s_res = db.students.insert_one(student_doc)
+    student_id = s_res.inserted_id
+
+    log_audit_event(
+        str(user_id), "school", "STUDENT_ADDED", "students", str(student_id),
+        {"student_id": student_custom_id, "school_id": str(school["_id"]), "name": name, "team_id": str(team_oid) if team_oid else None}
+    )
+
+    return api_response(
+        data={"student_id": str(student_id), "student_custom_id": student_custom_id, "name": name},
+        message=f"Student '{name}' registered with ID {student_custom_id}.",
+        status_code=201
+    )
+
+@schools_bp.route("/students/<student_id>", methods=["PUT"])
+@role_required("school")
+def update_school_student(student_id):
+    user_id = get_jwt_identity()
+    db = get_db()
+    school = db.schools.find_one({"user_id": parse_object_id(user_id)})
+    if not school:
+        return api_error("NOT_FOUND", "School not found.", status_code=404)
+
+    s_oid = parse_object_id(student_id)
+    student = db.students.find_one({"_id": s_oid, "school_id": school["_id"]})
+    if not student:
+        return api_error("NOT_FOUND", "Student record not found in your school.", status_code=404)
+
+    data = request.get_json() or {}
+    update_fields = {}
+    for f in ["full_name", "grade", "phone", "gender", "age"]:
+        if f in data:
+            update_fields[f] = data[f]
+
+    if "team_id" in data:
+        t_id_str = data["team_id"]
+        if t_id_str:
+            t_oid = parse_object_id(t_id_str)
+            team = db.teams.find_one({"_id": t_oid, "school_id": school["_id"]})
+            if not team:
+                return api_error("VALIDATION_ERROR", "Selected team does not belong to your school.", status_code=400)
+            update_fields["team_id"] = t_oid
+        else:
+            update_fields["team_id"] = None
+
+    update_fields["updated_at"] = datetime.now(timezone.utc)
+    db.students.update_one({"_id": s_oid}, {"$set": update_fields})
+
+    log_audit_event(
+        str(user_id), "school", "STUDENT_UPDATED", "students", str(s_oid),
+        {"student_id": student.get("student_custom_id"), "school_id": str(school["_id"])}
+    )
+
+    return api_response(message="Student information updated successfully.")
+
+@schools_bp.route("/students/<student_id>", methods=["DELETE"])
+@role_required("school")
+def remove_school_student(student_id):
+    user_id = get_jwt_identity()
+    db = get_db()
+    school = db.schools.find_one({"user_id": parse_object_id(user_id)})
+    if not school:
+        return api_error("NOT_FOUND", "School not found.", status_code=404)
+
+    s_oid = parse_object_id(student_id)
+    student = db.students.find_one({"_id": s_oid, "school_id": school["_id"]})
+    if not student:
+        return api_error("NOT_FOUND", "Student record not found in your school.", status_code=404)
+
+    # Check if team is locked
+    if student.get("team_id"):
+        team = db.teams.find_one({"_id": student["team_id"]})
+        if team and team.get("status") == "locked":
+            return api_error("FORBIDDEN", "Cannot remove student from a locked competition team.", status_code=403)
+
+    db.students.delete_one({"_id": s_oid})
+
+    log_audit_event(
+        str(user_id), "school", "STUDENT_REMOVED", "students", str(s_oid),
+        {"student_id": student.get("student_custom_id"), "name": student.get("full_name")}
+    )
+
+    return api_response(message="Student removed successfully.")
+
+@schools_bp.route("/profile", methods=["PUT"])
+@role_required("school")
+def update_school_profile():
+    user_id = get_jwt_identity()
+    db = get_db()
+    school = db.schools.find_one({"user_id": parse_object_id(user_id)})
+    if not school:
+        return api_error("NOT_FOUND", "School not found.", status_code=404)
+
+    data = request.get_json() or {}
+    now = datetime.now(timezone.utc)
+
+    update_fields = {"updated_at": now}
+    if "official_phone" in data:
+        update_fields["official_phone"] = data["official_phone"].strip()
+    if "website" in data:
+        update_fields["website"] = data["website"].strip()
+    if "address_line_1" in data:
+        update_fields["address_line_1"] = data["address_line_1"].strip()
+    if "address_line_2" in data:
+        update_fields["address_line_2"] = data["address_line_2"].strip()
+    if "pin_code" in data:
+        update_fields["pin_code"] = data["pin_code"].strip()
+
+    if "principal" in data and isinstance(data["principal"], dict):
+        update_fields["principal"] = {
+            "name": data["principal"].get("name", "").strip(),
+            "email": data["principal"].get("email", "").strip(),
+            "phone": data["principal"].get("phone", "").strip()
+        }
+    if "coordinator" in data and isinstance(data["coordinator"], dict):
+        update_fields["coordinator"] = {
+            "name": data["coordinator"].get("name", "").strip(),
+            "email": data["coordinator"].get("email", "").strip(),
+            "phone": data["coordinator"].get("phone", "").strip(),
+            "designation": data["coordinator"].get("designation", "Innovation Mentor").strip()
+        }
+
+    db.schools.update_one({"_id": school["_id"]}, {"$set": update_fields})
+
+    log_audit_event(
+        str(user_id), "school", "SCHOOL_PROFILE_UPDATED", "schools", str(school["_id"])
+    )
+
+    return api_response(message="School profile updated successfully.")

@@ -21,7 +21,11 @@ const RegisterStudent = lazy(() => import('../pages/auth/RegisterStudent'));
 const SchoolDashboard = lazy(() => import('../pages/dashboard/SchoolDashboard'));
 const StudentDashboard = lazy(() => import('../pages/dashboard/StudentDashboard'));
 const EvaluatorDashboard = lazy(() => import('../pages/dashboard/EvaluatorDashboard'));
+const JuryDashboard = lazy(() => import('../pages/dashboard/JuryDashboard'));
+const StateJuryDashboard = lazy(() => import('../pages/dashboard/StateJuryDashboard'));
 const AdminDashboard = lazy(() => import('../pages/dashboard/AdminDashboard'));
+const MentorDashboard = lazy(() => import('../pages/dashboard/MentorDashboard'));
+const DistrictDashboard = lazy(() => import('../pages/dashboard/DistrictDashboard'));
 
 // Guard & Errors
 import ProtectedRoute from '../components/auth/ProtectedRoute';
@@ -76,10 +80,42 @@ const AppRoutes = () => {
           }
         />
         <Route
+          path="/mentor/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['mentor', 'admin']}>
+              <MentorDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/district/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['district', 'admin']}>
+              <DistrictDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/evaluator/dashboard"
           element={
             <ProtectedRoute allowedRoles={['evaluator', 'admin']}>
               <EvaluatorDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/jury/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['jury', 'admin']}>
+              <JuryDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/state-jury/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['state_jury', 'admin']}>
+              <StateJuryDashboard />
             </ProtectedRoute>
           }
         />
@@ -101,4 +137,3 @@ const AppRoutes = () => {
 };
 
 export default AppRoutes;
-

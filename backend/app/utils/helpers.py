@@ -61,8 +61,48 @@ def generate_school_code(district: str, sequence_num: int) -> str:
     dist_code = get_district_code(district)
     return f"AFIP-AS-{dist_code}-{sequence_num:05d}"
 
+def generate_school_id(sequence_num: int) -> str:
+    return f"AFIP-SCH-{sequence_num:06d}"
+
+def generate_user_id(role: str, sequence_num: int) -> str:
+    role_prefix = (role or "USR")[:3].upper()
+    return f"AFIP-{role_prefix}-{sequence_num:06d}"
+
 def generate_team_code(sequence_num: int) -> str:
     return f"AFIP-T-{sequence_num:05d}"
+
+def generate_mentor_id(sequence_num: int) -> str:
+    return f"AFIP-MEN-{sequence_num:06d}"
+
+def generate_student_id(sequence_num: int) -> str:
+    return f"AFIP-STU-{sequence_num:06d}"
+
+def generate_project_id(sequence_num: int) -> str:
+    return f"AFIP-PRJ-{sequence_num:06d}"
+
+def generate_district_id(district_name: str) -> str:
+    dist_code = get_district_code(district_name)
+    return f"AFIP-DIST-{dist_code}"
+
+def generate_evaluation_id(sequence_num: int) -> str:
+    return f"AFIP-EVAL-{sequence_num:06d}"
+
+def generate_jury_id(sequence_num: int) -> str:
+    return f"AFIP-JUR-{sequence_num:06d}"
+
+def generate_state_jury_id(sequence_num: int) -> str:
+    return f"AFIP-STJ-{sequence_num:06d}"
+
+def generate_rubric_id(rubric_type: str, version: int = 1) -> str:
+    r_type = (rubric_type or "RUBRIC").upper()
+    return f"RUBRIC-{r_type}-V{version}"
+
+def generate_hierarchical_team_id(district_name: str, school_code_or_seq: str, team_seq: int) -> str:
+    dist_code = get_district_code(district_name)
+    # Extract short school suffix or format
+    cleaned_school = re.sub(r"[^A-Za-z0-9]", "", str(school_code_or_seq))
+    school_tag = cleaned_school[-6:] if len(cleaned_school) >= 6 else (cleaned_school.upper() or "SCH001")
+    return f"AFIP-{dist_code}-{school_tag}-T{team_seq:03d}"
 
 def api_response(data=None, message="Success", status_code=200):
     payload = {
