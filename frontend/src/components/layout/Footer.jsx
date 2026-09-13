@@ -56,7 +56,6 @@ const Footer = () => {
               Portals &amp; Login
             </h4>
             <ul className="space-y-2 text-sm">
-              <li><Link to="/login/student" className="hover:text-amber-400 transition-colors">Student &amp; Team Portal</Link></li>
               <li><Link to="/login/school" className="hover:text-amber-400 transition-colors">School &amp; Mentor Portal</Link></li>
               <li><Link to="/register/school" className="hover:text-amber-400 transition-colors">Register Your School</Link></li>
               <li><Link to="/login/evaluator" className="hover:text-amber-400 transition-colors">Evaluator Panel</Link></li>

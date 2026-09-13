@@ -86,8 +86,8 @@ const roleMeta = {
 };
 
 const Login = () => {
-  const { role = 'student' } = useParams();
-  const currentMeta = roleMeta[role] || roleMeta.student;
+  const { role = 'school' } = useParams();
+  const currentMeta = roleMeta[role] || roleMeta.school;
   const Icon = currentMeta.icon;
 
   const [email, setEmail] = useState('');
@@ -141,8 +141,7 @@ const Login = () => {
             { key: 'evaluator', label: 'Evaluator' },
             { key: 'district', label: 'District' },
             { key: 'jury', label: 'Jury' },
-            { key: 'state_jury', label: 'State Jury' },
-            { key: 'student', label: 'Student' }
+            { key: 'state_jury', label: 'State Jury' }
           ].map((r) => (
             <button
               key={r.key}
