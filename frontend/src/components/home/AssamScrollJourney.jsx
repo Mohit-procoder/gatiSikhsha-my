@@ -37,7 +37,7 @@ export const STAGES = [
     stageNumber: '2',
     title: 'Orientation on SSA YouTube',
     date: '1st to 10th October, 2026',
-    desc: '2-hour comprehensive digital orientation for all student teams, principals, and teacher mentors live streamed on Samagra Shiksha Assam YouTube channel.',
+    desc: '2-hour comprehensive digital orientation for all student teams, principals, and teacher mentors live streamed on SSA YouTube channel.',
     category: 'Orientation',
     icon: Users,
     color: 'teal',
@@ -600,26 +600,22 @@ const AssamScrollJourney = () => {
               >
                 {/* Left Side Slot */}
                 <div
-                  className={`w-full sm:w-5/12 ${isLeft ? 'block' : 'hidden sm:block sm:invisible'} ${
-                    stage.step === '01' ? 'sm:translate-x-8 lg:translate-x-12' : ''
-                  }`}
+                  className={`w-full sm:w-5/12 ${isLeft ? 'block' : 'hidden sm:block sm:invisible'} ${stage.step === '01' ? 'sm:translate-x-8 lg:translate-x-12' : ''
+                    }`}
                 >
                   {isLeft && (
                     <motion.div
-                      initial={{ opacity: 0, x: -30 }}
+                      initial={{ opacity: 1, x: 0 }}
                       animate={{
-                        opacity: isCurrent ? 1 : isActive ? 0.8 : 0.25,
-                        x: isActive ? 0 : -20,
-                        scale: isCurrent ? 1.03 : 0.98
+                        opacity: 1,
+                        x: 0,
+                        scale: isCurrent ? 1.03 : 1
                       }}
-                      transition={{ duration: 0.3 }}
-                      className={`pointer-events-auto p-5 sm:p-6 rounded-3xl border transition-all ${
-                        isCurrent
-                          ? 'glass-card border-emerald-500 shadow-2xl shadow-emerald-950/15 ring-2 ring-emerald-500/30 bg-white'
-                          : isActive
-                          ? 'bg-white/95 border-emerald-200/90 shadow-lg'
-                          : 'bg-white/80 border-slate-200/80 shadow-md'
-                      }`}
+                      transition={{ duration: 0.2 }}
+                      className={`pointer-events-auto p-5 sm:p-6 rounded-3xl border transition-all ${isCurrent
+                        ? 'glass-card border-emerald-500 shadow-2xl shadow-emerald-950/15 ring-2 ring-emerald-500/30 bg-white'
+                        : 'bg-white border-slate-200/90 shadow-md'
+                        }`}
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
                         <div className="flex items-center gap-2">
@@ -686,28 +682,24 @@ const AssamScrollJourney = () => {
 
                 {/* Right Side Slot */}
                 <div
-                  className={`w-full sm:w-5/12 ${!isLeft ? 'block' : 'hidden sm:block sm:invisible'} ${
-                    stage.step === '04' || stage.step === '09'
-                      ? 'sm:translate-x-10 lg:translate-x-14'
-                      : ''
-                  }`}
+                  className={`w-full sm:w-5/12 ${!isLeft ? 'block' : 'hidden sm:block sm:invisible'} ${stage.step === '04' || stage.step === '09'
+                    ? 'sm:translate-x-10 lg:translate-x-14'
+                    : ''
+                    }`}
                 >
                   {!isLeft && (
                     <motion.div
-                      initial={{ opacity: 0, x: 30 }}
+                      initial={{ opacity: 1, x: 0 }}
                       animate={{
-                        opacity: isCurrent ? 1 : isActive ? 0.8 : 0.25,
-                        x: isActive ? 0 : 20,
-                        scale: isCurrent ? 1.03 : 0.98
+                        opacity: 1,
+                        x: 0,
+                        scale: isCurrent ? 1.03 : 1
                       }}
-                      transition={{ duration: 0.3 }}
-                      className={`pointer-events-auto p-5 sm:p-6 rounded-3xl border transition-all ${
-                        isCurrent
-                          ? 'glass-card border-amber-500 shadow-2xl shadow-amber-950/15 ring-2 ring-amber-500/30 bg-white'
-                          : isActive
-                          ? 'bg-white/95 border-amber-200/90 shadow-lg'
-                          : 'bg-white/80 border-slate-200/80 shadow-md'
-                      }`}
+                      transition={{ duration: 0.2 }}
+                      className={`pointer-events-auto p-5 sm:p-6 rounded-3xl border transition-all ${isCurrent
+                        ? 'glass-card border-amber-500 shadow-2xl shadow-amber-950/15 ring-2 ring-amber-500/30 bg-white'
+                        : 'bg-white border-slate-200/90 shadow-md'
+                        }`}
                     >
                       <div className="flex flex-wrap items-center justify-between gap-2 mb-2.5">
                         <div className="flex items-center gap-2">
