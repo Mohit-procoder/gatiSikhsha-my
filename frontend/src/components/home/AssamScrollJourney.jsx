@@ -27,7 +27,7 @@ export const STAGES = [
     category: 'Registration',
     icon: SchoolIcon,
     color: 'emerald',
-    percent: 6
+    percent: 8.5
   },
   {
     step: '02',
@@ -137,7 +137,7 @@ export const STAGES = [
     category: 'Grand Finale',
     icon: Award,
     color: 'amber',
-    percent: 100
+    percent: 98
   }
 ];
 
@@ -154,7 +154,9 @@ const AssamScrollJourney = () => {
 
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [nodePositions, setNodePositions] = useState([]);
+  const [nodePositions, setNodePositions] = useState(() =>
+    STAGES.map((s) => ({ x: 200, y: (s.percent / 100) * 6000 }))
+  );
 
   // Calculate precise milestone node coordinates once path is mounted
   useEffect(() => {
@@ -264,7 +266,10 @@ const AssamScrollJourney = () => {
           // 6. Checkpoint Activation synchronized with progress
           let currentIdx = 0;
           for (let i = 0; i < STAGES.length; i++) {
-            if (progress * 100 >= (STAGES[i].percent - 4)) {
+            const prevPercent = i === 0 ? 0 : STAGES[i - 1].percent;
+            const currPercent = STAGES[i].percent;
+            const threshold = (prevPercent + currPercent) / 2;
+            if (progress * 100 >= threshold) {
               currentIdx = i;
             }
           }
@@ -288,20 +293,20 @@ const AssamScrollJourney = () => {
       {/* ==================================================================== */}
       <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col justify-between pointer-events-none z-20">
         {/* Top Header Banner */}
-        <div className="pt-24 px-4 text-center z-30 pointer-events-auto max-w-4xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-semibold mb-2 shadow-xs">
+        <div className="pt-20 px-4 text-center z-30 pointer-events-auto max-w-4xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-semibold mb-1.5 shadow-xs">
             <Sparkles className="w-3.5 h-3.5 text-amber-600" />
             <span>Scroll-Driven State Innovation Odyssey</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">
             Follow the Student Journey Through Assam
           </h2>
-          <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-xl mx-auto">
+          <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl mx-auto">
             Scroll down to watch our student innovator travel through tea gardens, knowledge camps, and zonal hackathons to the state final.
           </p>
 
           {/* Progress Bar */}
-          <div className="w-full max-w-md mx-auto mt-3 h-2 bg-slate-200/80 rounded-full overflow-hidden p-0.5 border border-slate-300/60">
+          <div className="w-full max-w-md mx-auto mt-2.5 h-1.5 bg-slate-200/80 rounded-full overflow-hidden p-0.5 border border-slate-300/60">
             <div
               className="h-full bg-gradient-to-r from-emerald-600 via-teal-500 to-amber-500 rounded-full transition-all duration-150"
               style={{ width: `${Math.min(100, Math.max(0, scrollProgress * 100))}%` }}
@@ -314,7 +319,7 @@ const AssamScrollJourney = () => {
         {/* ------------------------------------------------------------------ */}
         <div
           ref={womanRef}
-          className="absolute left-2 sm:left-6 lg:left-10 bottom-16 z-20 w-44 sm:w-60 lg:w-72 pointer-events-none select-none transition-transform"
+          className="absolute left-2 sm:left-4 lg:left-6 bottom-10 sm:bottom-14 z-20 w-36 sm:w-44 lg:w-48 pointer-events-none select-none transition-transform"
         >
           <div className="relative">
             <div className="absolute -inset-4 bg-emerald-500/10 blur-2xl rounded-full" />
@@ -601,7 +606,7 @@ const AssamScrollJourney = () => {
         <div className="pb-6 px-6 z-30 flex items-center justify-between pointer-events-auto text-xs font-semibold text-slate-600">
           <div className="flex items-center gap-2 bg-white/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-200 shadow-sm">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-            <span>Checkpoint {activeStepIndex + 1} of 12: {STAGES[activeStepIndex].title}</span>
+            <span>Checkpoint {STAGES[activeStepIndex]?.step || String(activeStepIndex + 1).padStart(2, '0')} of 12: {STAGES[activeStepIndex]?.title}</span>
           </div>
 
           <div className="hidden sm:flex items-center gap-2 text-emerald-800 bg-emerald-50/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-emerald-200">
@@ -722,21 +727,23 @@ const AssamScrollJourney = () => {
           {/* Milestone Checkpoint Nodes along the Path */}
           {nodePositions.map((pos, idx) => {
             const isActive = activeStepIndex >= idx;
+            const isCurrent = activeStepIndex === idx;
+            const stepNum = STAGES[idx]?.step || String(idx + 1).padStart(2, '0');
             return (
               <g key={STAGES[idx].step} className="transition-all duration-300">
                 <circle
                   cx={pos.x}
                   cy={pos.y}
-                  r={isActive ? 22 : 14}
-                  fill={isActive ? '#d97706' : '#94a3b8'}
-                  opacity={isActive ? 0.35 : 0.2}
+                  r={isCurrent ? 24 : isActive ? 20 : 14}
+                  fill={isCurrent ? '#f59e0b' : isActive ? '#10b981' : '#94a3b8'}
+                  opacity={isCurrent ? 0.45 : isActive ? 0.35 : 0.2}
                 />
                 <circle
                   cx={pos.x}
                   cy={pos.y}
-                  r={isActive ? 13 : 9}
-                  fill={isActive ? '#1b4332' : '#64748b'}
-                  stroke="#ffffff"
+                  r={isCurrent ? 15 : isActive ? 13 : 9}
+                  fill={isCurrent ? '#064e3b' : isActive ? '#1b4332' : '#64748b'}
+                  stroke={isCurrent ? '#f59e0b' : '#ffffff'}
                   strokeWidth="3"
                 />
                 <text
@@ -747,7 +754,7 @@ const AssamScrollJourney = () => {
                   fontSize="9"
                   fontWeight="bold"
                 >
-                  {idx + 1}
+                  {stepNum}
                 </text>
               </g>
             );
@@ -810,109 +817,130 @@ const AssamScrollJourney = () => {
       </div>
 
       {/* ==================================================================== */}
-      {/* 12 TIMELINE CHECKPOINT INFORMATION CARDS (Positioned along scroll)   */}
+      {/* 12 TIMELINE CHECKPOINT INFORMATION CARDS (Positioned along road)     */}
       {/* ==================================================================== */}
-      <div className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 pointer-events-none pt-[120px] z-30">
-        {STAGES.map((stage, idx) => {
-          const isLeft = idx % 2 === 0;
-          const isActive = activeStepIndex >= idx;
-          const isCurrent = activeStepIndex === idx;
+      <div className="absolute inset-0 w-full pointer-events-none z-30">
+        <div className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 h-full">
+          {STAGES.map((stage, idx) => {
+            const isLeft = idx % 2 === 0;
+            const isActive = activeStepIndex >= idx;
+            const isCurrent = activeStepIndex === idx;
+            const pos = nodePositions[idx] || { y: (stage.percent / 100) * 6000 };
+            const topPercent = (pos.y / 6000) * 100;
 
-          return (
-            <div
-              key={stage.step}
-              className="w-full flex items-center justify-between"
-              style={{ minHeight: '52vh' }}
-            >
-              {/* Left Side Slot */}
-              <div className={`w-full sm:w-5/12 ${isLeft ? 'block' : 'hidden sm:block sm:invisible'}`}>
-                {isLeft && (
-                  <motion.div
-                    initial={{ opacity: 0, x: -30 }}
-                    animate={{
-                      opacity: isActive ? 1 : 0.25,
-                      x: isActive ? 0 : -20,
-                      scale: isCurrent ? 1.02 : 0.98
-                    }}
-                    transition={{ duration: 0.4 }}
-                    className={`pointer-events-auto p-6 sm:p-7 rounded-3xl border transition-all ${
-                      isCurrent
-                        ? 'glass-card border-emerald-500/80 shadow-2xl shadow-emerald-950/10 ring-2 ring-emerald-500/20 bg-white'
-                        : 'bg-white/85 border-slate-200/80 shadow-md'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                      <span className="text-2xl font-black text-emerald-800 tracking-tight">
-                        {stage.step}
-                      </span>
-                      <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100/80 text-emerald-900 border border-emerald-300/60">
-                        {stage.category}
-                      </span>
-                    </div>
+            return (
+              <div
+                key={stage.step}
+                className="absolute left-4 right-4 sm:left-6 sm:right-6 flex items-center justify-between"
+                style={{
+                  top: `${topPercent}%`,
+                  transform: idx === 0 ? 'translateY(-20%)' : 'translateY(-50%)'
+                }}
+              >
+                {/* Left Side Slot */}
+                <div
+                  className={`w-full sm:w-5/12 ${isLeft ? 'block' : 'hidden sm:block sm:invisible'} ${
+                    stage.step === '01' ? 'sm:translate-x-8 lg:translate-x-12' : ''
+                  }`}
+                >
+                  {isLeft && (
+                    <motion.div
+                      initial={{ opacity: 0, x: -30 }}
+                      animate={{
+                        opacity: isCurrent ? 1 : isActive ? 0.8 : 0.25,
+                        x: isActive ? 0 : -20,
+                        scale: isCurrent ? 1.03 : 0.98
+                      }}
+                      transition={{ duration: 0.3 }}
+                      className={`pointer-events-auto p-5 sm:p-7 rounded-3xl border transition-all ${
+                        isCurrent
+                          ? 'glass-card border-emerald-500 shadow-2xl shadow-emerald-950/15 ring-2 ring-emerald-500/30 bg-white'
+                          : isActive
+                          ? 'bg-white/95 border-emerald-200/90 shadow-lg'
+                          : 'bg-white/80 border-slate-200/80 shadow-md'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <span className="text-2xl font-black text-emerald-800 tracking-tight">
+                          {stage.step}
+                        </span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-100/80 text-emerald-900 border border-emerald-300/60">
+                          {stage.category}
+                        </span>
+                      </div>
 
-                    <h3 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">
-                      {stage.title}
-                    </h3>
+                      <h3 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">
+                        {stage.title}
+                      </h3>
 
-                    <div className="flex items-center gap-2 mt-2 text-xs font-semibold text-amber-700">
-                      <Calendar className="w-3.5 h-3.5" />
-                      <span>{stage.date}</span>
-                    </div>
+                      <div className="flex items-center gap-2 mt-2 text-xs font-semibold text-amber-700">
+                        <Calendar className="w-3.5 h-3.5" />
+                        <span>{stage.date}</span>
+                      </div>
 
-                    <p className="mt-3 text-xs sm:text-sm text-slate-600 leading-relaxed">
-                      {stage.desc}
-                    </p>
-                  </motion.div>
-                )}
+                      <p className="mt-3 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                        {stage.desc}
+                      </p>
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Center Spacer for Pathway */}
+                <div className="hidden sm:block w-2/12" />
+
+                {/* Right Side Slot */}
+                <div
+                  className={`w-full sm:w-5/12 ${!isLeft ? 'block' : 'hidden sm:block sm:invisible'} ${
+                    stage.step === '04' || stage.step === '12'
+                      ? 'sm:translate-x-12 lg:translate-x-16'
+                      : ''
+                  }`}
+                >
+                  {!isLeft && (
+                    <motion.div
+                      initial={{ opacity: 0, x: 30 }}
+                      animate={{
+                        opacity: isCurrent ? 1 : isActive ? 0.8 : 0.25,
+                        x: isActive ? 0 : 20,
+                        scale: isCurrent ? 1.03 : 0.98
+                      }}
+                      transition={{ duration: 0.3 }}
+                      className={`pointer-events-auto p-5 sm:p-7 rounded-3xl border transition-all ${
+                        isCurrent
+                          ? 'glass-card border-amber-500 shadow-2xl shadow-amber-950/15 ring-2 ring-amber-500/30 bg-white'
+                          : isActive
+                          ? 'bg-white/95 border-amber-200/90 shadow-lg'
+                          : 'bg-white/80 border-slate-200/80 shadow-md'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <span className="text-2xl font-black text-amber-800 tracking-tight">
+                          {stage.step}
+                        </span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-100/80 text-amber-900 border border-amber-300/60">
+                          {stage.category}
+                        </span>
+                      </div>
+
+                      <h3 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">
+                        {stage.title}
+                      </h3>
+
+                      <div className="flex items-center gap-2 mt-2 text-xs font-semibold text-emerald-700">
+                        <Calendar className="w-3.5 h-3.5" />
+                        <span>{stage.date}</span>
+                      </div>
+
+                      <p className="mt-3 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                        {stage.desc}
+                      </p>
+                    </motion.div>
+                  )}
+                </div>
               </div>
-
-              {/* Center Spacer for Pathway */}
-              <div className="hidden sm:block w-2/12" />
-
-              {/* Right Side Slot */}
-              <div className={`w-full sm:w-5/12 ${!isLeft ? 'block' : 'hidden sm:block sm:invisible'}`}>
-                {!isLeft && (
-                  <motion.div
-                    initial={{ opacity: 0, x: 30 }}
-                    animate={{
-                      opacity: isActive ? 1 : 0.25,
-                      x: isActive ? 0 : 20,
-                      scale: isCurrent ? 1.02 : 0.98
-                    }}
-                    transition={{ duration: 0.4 }}
-                    className={`pointer-events-auto p-6 sm:p-7 rounded-3xl border transition-all ${
-                      isCurrent
-                        ? 'glass-card border-amber-500/80 shadow-2xl shadow-amber-950/10 ring-2 ring-amber-500/20 bg-white'
-                        : 'bg-white/85 border-slate-200/80 shadow-md'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                      <span className="text-2xl font-black text-amber-800 tracking-tight">
-                        {stage.step}
-                      </span>
-                      <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-100/80 text-amber-900 border border-amber-300/60">
-                        {stage.category}
-                      </span>
-                    </div>
-
-                    <h3 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight leading-snug">
-                      {stage.title}
-                    </h3>
-
-                    <div className="flex items-center gap-2 mt-2 text-xs font-semibold text-emerald-700">
-                      <Calendar className="w-3.5 h-3.5" />
-                      <span>{stage.date}</span>
-                    </div>
-
-                    <p className="mt-3 text-xs sm:text-sm text-slate-600 leading-relaxed">
-                      {stage.desc}
-                    </p>
-                  </motion.div>
-                )}
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </section>
   );

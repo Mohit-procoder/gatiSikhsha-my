@@ -6,4 +6,4 @@ bcrypt==4.1.3
 python-dotenv==1.0.1
 mongomock==4.1.2
 pytest==8.2.1
-setuptools>=70
+setuptools==80.9.0

@@ -2,7 +2,6 @@ import React from 'react';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import { STAGES } from '../components/home/AssamScrollJourney';
-import FunnelVisualization from '../components/home/FunnelVisualization';
 import { Calendar, Clock, MapPin, Sparkles, CheckCircle2, Trophy, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -26,13 +25,8 @@ const Journey = () => {
           </p>
         </section>
 
-        {/* Funnel Overview */}
-        <div className="mt-12">
-          <FunnelVisualization />
-        </div>
-
-        {/* Detailed Timeline List */}
-        <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-20">
+        {/* Detailed Timeline List (Stages 1 to 12) */}
+        <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
           <div className="text-center mb-12">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
               Stage-by-Stage Milestones &amp; Schedule
