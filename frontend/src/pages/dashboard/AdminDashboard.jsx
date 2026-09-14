@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { useCompetition } from '../../context/CompetitionContext';
 import api from '../../services/api';
 import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
@@ -8,7 +9,7 @@ import {
   ShieldCheck, School, Users, UserCheck, Trophy, Settings, FileText,
   Activity, Search, Filter, CheckCircle2, XCircle, AlertCircle, Loader2,
   Clock, Plus, ToggleLeft, ToggleRight, Sparkles, MapPin, Building, Eye, X, Award,
-  Lock, Unlock, ShieldAlert, Sliders, ArrowRight
+  Lock, Unlock, ShieldAlert, Sliders, ArrowRight, Calendar, Edit3, Check
 } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -18,6 +19,14 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Competition Rounds & Date Governance Context
+  const { rounds, currentStage, activeRound, alterActiveRound, updateRoundDates, refreshRounds } = useCompetition();
+  const [editDatesModalOpen, setEditDatesModalOpen] = useState(false);
+  const [targetRound, setTargetRound] = useState(null);
+  const [targetDates, setTargetDates] = useState('');
+  const [targetName, setTargetName] = useState('');
+  const [savingDates, setSavingDates] = useState(false);
 
   // Schools list state
   const [schools, setSchools] = useState([]);
@@ -357,13 +366,41 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleUpdateStage = async (newStage) => {
+  const handleSetActiveRound = async (roundId) => {
     try {
-      await api.post('/admin/stage', { stage: newStage });
-      addToast(`Active competition stage updated to '${newStage}'`, 'success');
+      await alterActiveRound(roundId);
+      addToast(`Active round changed to '${roundId.replace(/_/g, ' ').toUpperCase()}' across all pages.`, 'success');
       fetchStats();
+      refreshRounds();
     } catch (err) {
-      addToast('Failed to update stage', 'error');
+      addToast(err.response?.data?.error?.message || 'Failed to alter active round.', 'error');
+    }
+  };
+
+  const openEditDatesModal = (round) => {
+    setTargetRound(round);
+    setTargetDates(round.dates || '');
+    setTargetName(round.name || '');
+    setEditDatesModalOpen(true);
+  };
+
+  const handleSaveRoundDates = async (e) => {
+    e.preventDefault();
+    if (!targetRound || !targetDates.trim()) {
+      addToast('Please provide a valid date string.', 'error');
+      return;
+    }
+    setSavingDates(true);
+    try {
+      await updateRoundDates(targetRound.id, targetDates.trim(), targetName.trim());
+      addToast(`Dates for '${targetName || targetRound.name}' successfully updated across all pages!`, 'success');
+      setEditDatesModalOpen(false);
+      fetchStats();
+      refreshRounds();
+    } catch (err) {
+      addToast(err.response?.data?.error?.message || 'Failed to update round dates.', 'error');
+    } finally {
+      setSavingDates(false);
     }
   };
 
@@ -983,36 +1020,124 @@ const AdminDashboard = () => {
         {activeTab === 'settings' && (
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-8">
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Competition Phase Governance</h2>
-              <p className="text-xs text-slate-500">Manage the active state stage displayed across all student and school dashboards.</p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900">Competition Phase &amp; Rounds Governance</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Alter the active competition round and edit round schedule dates. All changes propagate immediately across Homepage, Journey, School, and Mentor dashboards.
+                  </p>
+                </div>
 
-              <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                {[
-                  { id: 'school_registration', label: '1. School Registration' },
-                  { id: 'mentor_onboarding', label: '2. Mentor Onboarding' },
-                  { id: 'team_formation', label: '3. Team Formation' },
-                  { id: 'online_bootcamp', label: '4. 20h Online Bootcamp' },
-                  { id: 'mcq_assessment', label: '5. MCQ Assessment' },
-                  { id: 'top_1000', label: '6. Top 1,000 Shortlist' },
-                  { id: 'advanced_bootcamp', label: '7. Advanced Bootcamp' },
-                  { id: 'coding_challenge', label: '8. Coding Challenge' },
-                  { id: 'shortlist_198', label: '9. 198 Teams Shortlist' },
-                  { id: 'zonal_hackathon', label: '10. Zonal 48h Hackathon' },
-                  { id: 'finalist_preparation', label: '11. Finalist Prep' },
-                  { id: 'state_final', label: '12. State Final' },
-                ].map((st) => (
-                  <button
-                    key={st.id}
-                    onClick={() => handleUpdateStage(st.id)}
-                    className={`p-3 rounded-xl text-left text-xs font-bold border transition-all cursor-pointer ${
-                      stats?.current_stage === st.id
-                        ? 'bg-emerald-800 text-white border-emerald-900 shadow-xs'
-                        : 'bg-[#faf8f5] text-slate-700 border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    {st.label}
-                  </button>
-                ))}
+                {activeRound && (
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-3 shrink-0 shadow-xs">
+                    <div className="w-3 h-3 rounded-full bg-emerald-600 animate-pulse shrink-0" />
+                    <div>
+                      <div className="text-[10px] uppercase font-extrabold tracking-wider text-emerald-800">
+                        Current Active Round
+                      </div>
+                      <div className="text-xs font-bold text-slate-900">
+                        Step {activeRound.step} • {activeRound.name}
+                      </div>
+                      <div className="text-[11px] text-slate-500 font-medium flex items-center gap-1 mt-0.5">
+                        <Calendar className="w-3 h-3 text-emerald-600" />
+                        <span>{activeRound.dates}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Rounds Grid */}
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {(rounds && rounds.length > 0 ? rounds : [
+                  { id: 'school_registration', step: '01', name: 'School Registration', dates: '17th - 30th Sep, 2026', status: 'active' },
+                  { id: 'mentor_onboarding', step: '02', name: 'Mentor Onboarding', dates: '1st - 10th Oct, 2026', status: 'upcoming' },
+                  { id: 'team_formation', step: '03', name: 'Team Formation', dates: '10th - 15th Oct, 2026', status: 'upcoming' },
+                  { id: 'online_bootcamp', step: '04', name: '20h Online Bootcamp', dates: '15th - 22nd Oct, 2026', status: 'upcoming' },
+                  { id: 'mcq_assessment', step: '05', name: 'MCQ Assessment', dates: '23rd - 30th Oct, 2026', status: 'upcoming' },
+                  { id: 'top_1000', step: '06', name: 'Top 1,000 Shortlist', dates: '1st - 7th Nov, 2026', status: 'upcoming' },
+                  { id: 'advanced_bootcamp', step: '07', name: 'Advanced Bootcamp', dates: '9th Nov - 6th Dec, 2026', status: 'upcoming' },
+                  { id: 'coding_challenge', step: '08', name: 'Coding Challenge', dates: '14th - 19th Dec, 2026', status: 'upcoming' },
+                  { id: 'shortlist_198', step: '09', name: '198 Teams Shortlist', dates: '21st - 26th Dec, 2026', status: 'upcoming' },
+                  { id: 'zonal_hackathon', step: '10', name: 'Zonal 48h Hackathon', dates: '27th - 30th Dec, 2026', status: 'upcoming' },
+                  { id: 'finalist_preparation', step: '11', name: 'Finalist Prep', dates: '1st - 3rd Jan, 2027', status: 'upcoming' },
+                  { id: 'state_final', step: '12', name: 'State Final', dates: '4th - 8th Jan, 2027', status: 'upcoming' },
+                ]).map((st) => {
+                  const isActive = currentStage === st.id || st.status === 'active';
+                  const isCompleted = st.status === 'completed';
+                  return (
+                    <div
+                      key={st.id}
+                      className={`p-4 rounded-2xl border transition-all flex flex-col justify-between relative overflow-hidden ${
+                        isActive
+                          ? 'bg-emerald-50/60 border-emerald-500 shadow-md ring-2 ring-emerald-500/20'
+                          : isCompleted
+                          ? 'bg-slate-50/70 border-slate-200 text-slate-700'
+                          : 'bg-white border-slate-200 hover:border-slate-300'
+                      }`}
+                    >
+                      <div>
+                        {/* Top pill bar */}
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <span className="text-[11px] font-mono font-bold text-slate-400">
+                            STEP {st.step}
+                          </span>
+                          {isActive ? (
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-700 text-white flex items-center gap-1.5 shadow-2xs">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-200 animate-pulse" />
+                              ACTIVE ROUND
+                            </span>
+                          ) : isCompleted ? (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-200 text-slate-700 flex items-center gap-1">
+                              <Check className="w-3 h-3 text-slate-500" />
+                              COMPLETED
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500">
+                              UPCOMING
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Title */}
+                        <h3 className="text-sm font-bold text-slate-900 leading-snug">
+                          {st.name || st.label}
+                        </h3>
+
+                        {/* Date display */}
+                        <div className="mt-2.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200/80 flex items-center gap-2 text-xs font-semibold text-slate-700 shadow-2xs">
+                          <Calendar className="w-3.5 h-3.5 text-cyan-700 shrink-0" />
+                          <span className="truncate">{st.dates || 'Dates not set'}</span>
+                        </div>
+                      </div>
+
+                      {/* Action buttons */}
+                      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2">
+                        {isActive ? (
+                          <div className="flex-1 py-1.5 px-3 rounded-xl bg-emerald-100 text-emerald-900 text-xs font-bold text-center border border-emerald-300">
+                            Current Active
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleSetActiveRound(st.id)}
+                            className="flex-1 py-1.5 px-3 rounded-xl bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center justify-center gap-1"
+                          >
+                            <span>Set Active</span>
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => openEditDatesModal(st)}
+                          className="py-1.5 px-3 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 hover:text-slate-900 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Edit3 className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Change Dates</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -1366,6 +1491,79 @@ const AdminDashboard = () => {
                         <span>Confirm Rejection</span>
                       </>
                     )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* EDIT ROUND DATES MODAL */}
+        {editDatesModalOpen && targetRound && (
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Change Round Schedule Dates</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Updates will propagate instantly across all pages and dashboards.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditDatesModalOpen(false)}
+                  className="p-1.5 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveRoundDates} className="space-y-4 text-xs">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    Round / Stage Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={targetName}
+                    onChange={(e) => setTargetName(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 text-slate-900 font-semibold focus:bg-white focus:ring-2 focus:ring-emerald-500 shadow-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    Schedule Dates String <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. 17th - 30th Sep, 2026 or 1st - 15th Nov, 2026"
+                    value={targetDates}
+                    onChange={(e) => setTargetDates(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-slate-900 font-medium focus:ring-2 focus:ring-emerald-500 shadow-xs"
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Format: <code>17th - 30th Sep, 2026</code> or <code>10th - 25th Oct, 2026</code>
+                  </p>
+                </div>
+
+                <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setEditDatesModalOpen(false)}
+                    className="px-4 py-2 text-slate-600 font-bold hover:text-slate-800 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingDates}
+                    className="px-5 py-2.5 bg-emerald-800 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-sm flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+                  >
+                    {savingDates && <Loader2 className="w-4 h-4 animate-spin" />}
+                    <span>Save &amp; Broadcast Dates</span>
                   </button>
                 </div>
               </form>

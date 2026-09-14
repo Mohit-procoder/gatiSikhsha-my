@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
+import { CompetitionProvider } from './context/CompetitionContext';
 import AppRoutes from './routes/AppRoutes';
 import ScrollToTop from './components/layout/ScrollToTop';
 
@@ -11,7 +12,9 @@ function App() {
       <ScrollToTop />
       <ToastProvider>
         <AuthProvider>
-          <AppRoutes />
+          <CompetitionProvider>
+            <AppRoutes />
+          </CompetitionProvider>
         </AuthProvider>
       </ToastProvider>
     </BrowserRouter>

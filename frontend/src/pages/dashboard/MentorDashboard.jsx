@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { useCompetition } from '../../context/CompetitionContext';
 import api from '../../services/api';
 import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
@@ -34,6 +35,15 @@ const COMPETITION_STAGES = [
 const MentorDashboard = () => {
   const { user, profile } = useAuth();
   const { addToast } = useToast();
+  const { rounds, activeRound, currentStage } = useCompetition();
+
+  const dynamicRoadmap = (rounds && rounds.length > 0 ? rounds : COMPETITION_STAGES).map((r, i) => ({
+    id: r.id,
+    step: r.step || (i + 1 < 10 ? `0${i + 1}` : `${i + 1}`),
+    name: r.name,
+    date: r.dates || r.date,
+    status: r.status || (r.id === currentStage ? 'active' : 'upcoming')
+  }));
 
   const [activeTab, setActiveTab] = useState('teams');
   const [mentorData, setMentorData] = useState(null);
@@ -380,16 +390,16 @@ const MentorDashboard = () => {
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-cyan-600" /> State Competition Journey
             </h3>
-            <span className="text-xs font-bold text-cyan-800 bg-cyan-50 px-3 py-1 rounded-full border border-cyan-200 flex items-center gap-1.5 self-start sm:self-auto">
+            <span className="text-xs font-bold text-cyan-800 bg-cyan-50 px-3 py-1 rounded-full border border-cyan-200 flex items-center gap-1.5 self-start sm:self-auto shadow-2xs">
               <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span>
-              Active Stage: Step 05 • District Shortlisting
+              Active Stage: Step {activeRound?.step || '01'} • {activeRound?.name || 'School Registration'}
             </span>
           </div>
 
           <div className="relative">
             <div className="overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <div className="flex items-stretch gap-2 min-w-max">
-                {COMPETITION_STAGES.map((st, i) => (
+                {dynamicRoadmap.map((st, i) => (
                   <div key={st.id} className="flex items-center">
                     <div
                       className={`w-36 p-3 rounded-xl text-center border transition-all flex flex-col justify-between ${
@@ -414,7 +424,7 @@ const MentorDashboard = () => {
                         {st.date}
                       </div>
                     </div>
-                    {i < COMPETITION_STAGES.length - 1 && (
+                    {i < dynamicRoadmap.length - 1 && (
                       <ChevronRight className="w-4 h-4 text-slate-300 mx-1 shrink-0" />
                     )}
                   </div>

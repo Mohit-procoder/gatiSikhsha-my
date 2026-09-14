@@ -6,6 +6,7 @@ import {
   Calendar, Award, BookOpen, BrainCircuit,
   Code2, Sparkles, ArrowDown
 } from 'lucide-react';
+import { useCompetition } from '../../context/CompetitionContext';
 
 
 gsap.registerPlugin(ScrollTrigger);
@@ -107,6 +108,22 @@ export const STAGES = [
 
 
 const AssamScrollJourney = () => {
+  const { rounds } = useCompetition();
+
+  const dynamicStages = STAGES.map((s) => {
+    const matchingRound = rounds.find(
+      (r) =>
+        r.step === s.step ||
+        (r.name && s.title && r.name.toLowerCase().includes(s.title.toLowerCase().slice(0, 8))) ||
+        (s.title && r.name && s.title.toLowerCase().includes(r.name.toLowerCase().slice(0, 8)))
+    );
+    return {
+      ...s,
+      date: matchingRound?.dates || s.date,
+      status: matchingRound?.status || 'upcoming'
+    };
+  });
+
   const containerRef = useRef(null);
   const pathRef = useRef(null);
   const activeTrailRef = useRef(null);
@@ -317,7 +334,7 @@ const AssamScrollJourney = () => {
         <div className="pb-6 px-6 z-30 flex items-center justify-between pointer-events-auto text-xs font-semibold text-slate-600">
           <div className="flex items-center gap-2 bg-white/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-200 shadow-sm">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-            <span>Stage {STAGES[activeStepIndex]?.step || String(activeStepIndex + 1).padStart(2, '0')} of 09: {STAGES[activeStepIndex]?.title}</span>
+            <span>Stage {STAGES[activeStepIndex]?.step || String(activeStepIndex + 1).padStart(2, '0')} of 06: {STAGES[activeStepIndex]?.title}</span>
           </div>
 
           <div className="hidden sm:flex items-center gap-2 text-emerald-800 bg-emerald-50/90 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-emerald-200">
@@ -532,7 +549,7 @@ const AssamScrollJourney = () => {
       {/* ==================================================================== */}
       <div className="absolute inset-0 w-full pointer-events-none z-30">
         <div className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 h-full">
-          {STAGES.map((stage, idx) => {
+          {dynamicStages.map((stage, idx) => {
             const isLeft = idx % 2 === 0;
             const isActive = activeStepIndex >= idx;
             const isCurrent = activeStepIndex === idx;
