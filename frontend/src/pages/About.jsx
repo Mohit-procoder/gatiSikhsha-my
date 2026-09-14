@@ -91,7 +91,7 @@ const About = () => {
             </div>
             <h3 className="text-xl font-bold text-slate-900">Institutional Backing</h3>
             <p className="text-sm text-slate-600 mt-3 leading-relaxed">
-              Jointly governed by the <strong>Technology Innovation Hub of IIT Delhi (IHFC)</strong> and the <strong>Department of School Education / Samagra Shiksha, Assam</strong>.
+              Jointly governed by the <strong>Innovation hub for cobotics (IHFC)</strong> and the <strong>Department of School Education / ASOM, Assam</strong>.
             </p>
           </div>
 

@@ -8,8 +8,15 @@ import Footer from '../../components/layout/Footer';
 import {
   Compass, Users, FileText, CheckCircle2, Clock, Sparkles, MessageSquare,
   Award, School, Calendar, ChevronRight, X, Loader2, Star, ShieldCheck,
-  Send, ExternalLink, ArrowRight, Bell, AlertCircle
+  Send, ExternalLink, ArrowRight, Bell, AlertCircle, PlusCircle, Upload,
+  Trash2, Camera, User, Phone, Mail, Image as ImageIcon, Info
 } from 'lucide-react';
+
+const CATEGORY_GRADES = {
+  'VI-VIII': ['Class VI', 'Class VII', 'Class VIII'],
+  'IX-X': ['Class IX', 'Class X'],
+  'XI-XII': ['Class XI', 'Class XII']
+};
 
 const COMPETITION_STAGES = [
   { id: 'registration', step: '01', name: 'School Registration', date: '17th - 30th Sep', status: 'completed' },
@@ -32,6 +39,22 @@ const MentorDashboard = () => {
   const [mentorData, setMentorData] = useState(null);
   const [assignedTeams, setAssignedTeams] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Team creation modal state (1 team max per mentor)
+  const [createTeamModalOpen, setCreateTeamModalOpen] = useState(false);
+  const [submittingTeam, setSubmittingTeam] = useState(false);
+  const [teamForm, setTeamForm] = useState({
+    team_name: '',
+    category: 'IX-X',
+    leader_name: '',
+    leader_email: '',
+    leader_phone: '',
+    leader_grade: 'Class IX',
+    leader_photo: '',
+    leader_father_name: '',
+    leader_mother_name: '',
+    members: [] // up to 4: { name, email, phone, grade, photo, father_name, mother_name }
+  });
 
   // Feedback modal state
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
@@ -68,6 +91,160 @@ const MentorDashboard = () => {
   useEffect(() => {
     fetchMentorData();
   }, []);
+
+  const handlePhotoUpload = (file, callback) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      addToast('Please upload a valid image file (PNG, JPG, JPEG, WEBP).', 'error');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      addToast('Image size must be less than 2MB.', 'error');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      callback(e.target.result);
+    };
+    reader.onerror = () => {
+      addToast('Failed to read image file.', 'error');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCategoryChange = (newCategory) => {
+    const defaultGrade = CATEGORY_GRADES[newCategory]?.[0] || 'Class IX';
+    setTeamForm(prev => ({
+      ...prev,
+      category: newCategory,
+      leader_grade: defaultGrade,
+      members: prev.members.map(m => ({ ...m, grade: defaultGrade }))
+    }));
+  };
+
+  const handleCreateTeamSubmit = async (e) => {
+    e.preventDefault();
+
+    if (assignedTeams.length >= 1) {
+      addToast('Each mentor can create at most 1 team. Quota reached.', 'error');
+      return;
+    }
+
+    if (!teamForm.team_name.trim()) {
+      addToast('Please enter a team name.', 'error');
+      return;
+    }
+
+    // Validate Leader mandatory * fields
+    if (!teamForm.leader_photo) {
+      addToast('Team Leader photo is mandatory (*).', 'error');
+      return;
+    }
+    if (!teamForm.leader_name.trim()) {
+      addToast('Team Leader full name is mandatory (*).', 'error');
+      return;
+    }
+    if (!teamForm.leader_grade.trim()) {
+      addToast('Team Leader grade is mandatory (*).', 'error');
+      return;
+    }
+    if (!teamForm.leader_father_name.trim()) {
+      addToast("Team Leader father's name is mandatory (*).", 'error');
+      return;
+    }
+    if (!teamForm.leader_mother_name.trim()) {
+      addToast("Team Leader mother's name is mandatory (*).", 'error');
+      return;
+    }
+    if (!teamForm.leader_phone.trim()) {
+      addToast('Team Leader mobile number is mandatory (*).', 'error');
+      return;
+    }
+    if (!teamForm.leader_email.trim()) {
+      addToast('Team Leader email ID is mandatory (*).', 'error');
+      return;
+    }
+
+    // Validate Members mandatory * fields
+    for (let i = 0; i < teamForm.members.length; i++) {
+      const m = teamForm.members[i];
+      const memberLabel = `Member #${i + 1}`;
+      if (!m.photo) {
+        addToast(`${memberLabel}: Student photo is mandatory (*).`, 'error');
+        return;
+      }
+      if (!m.name.trim()) {
+        addToast(`${memberLabel}: Full name is mandatory (*).`, 'error');
+        return;
+      }
+      if (!m.grade.trim()) {
+        addToast(`${memberLabel}: Grade is mandatory (*).`, 'error');
+        return;
+      }
+      if (!m.father_name.trim()) {
+        addToast(`${memberLabel}: Father's name is mandatory (*).`, 'error');
+        return;
+      }
+      if (!m.mother_name.trim()) {
+        addToast(`${memberLabel}: Mother's name is mandatory (*).`, 'error');
+        return;
+      }
+      if (!m.phone.trim()) {
+        addToast(`${memberLabel}: Mobile number is mandatory (*).`, 'error');
+        return;
+      }
+      if (!m.email.trim()) {
+        addToast(`${memberLabel}: Email ID is mandatory (*).`, 'error');
+        return;
+      }
+    }
+
+    setSubmittingTeam(true);
+    try {
+      const payload = {
+        team_name: teamForm.team_name.trim(),
+        category: teamForm.category,
+        leader_name: teamForm.leader_name.trim(),
+        leader_email: teamForm.leader_email.trim().toLowerCase(),
+        leader_phone: teamForm.leader_phone.trim(),
+        leader_grade: teamForm.leader_grade.trim(),
+        leader_photo: teamForm.leader_photo,
+        leader_father_name: teamForm.leader_father_name.trim(),
+        leader_mother_name: teamForm.leader_mother_name.trim(),
+        members: teamForm.members.map(m => ({
+          name: m.name.trim(),
+          email: m.email.trim().toLowerCase(),
+          phone: m.phone.trim(),
+          grade: m.grade.trim(),
+          photo: m.photo,
+          father_name: m.father_name.trim(),
+          mother_name: m.mother_name.trim()
+        }))
+      };
+
+      const res = await api.post('/teams', payload);
+      addToast(res.data.message || 'Competition team registered successfully!', 'success');
+      setCreateTeamModalOpen(false);
+      setTeamForm({
+        team_name: '',
+        category: 'IX-X',
+        leader_name: '',
+        leader_email: '',
+        leader_phone: '',
+        leader_grade: 'Class IX',
+        leader_photo: '',
+        leader_father_name: '',
+        leader_mother_name: '',
+        members: []
+      });
+      fetchMentorData();
+    } catch (err) {
+      const msg = err.response?.data?.error?.message || err.message || 'Failed to create team.';
+      addToast(msg, 'error');
+    } finally {
+      setSubmittingTeam(false);
+    }
+  };
 
   const openFeedbackModal = (team) => {
     setSelectedTeam(team);
@@ -167,14 +344,31 @@ const MentorDashboard = () => {
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 text-center min-w-[120px]">
-                <div className="text-2xl font-black text-cyan-300">{stats.assigned_teams_count}</div>
-                <div className="text-xs text-slate-300 font-medium">Assigned Teams</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 text-center min-w-[120px]">
-                <div className="text-2xl font-black text-emerald-300">{stats.total_students_mentored}</div>
-                <div className="text-xs text-slate-300 font-medium">Mentees</div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              {assignedTeams.length === 0 ? (
+                <button
+                  type="button"
+                  onClick={() => setCreateTeamModalOpen(true)}
+                  className="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-2xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-emerald-500/25 cursor-pointer transition-all shrink-0"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  <span>Form Competition Team (0/1)</span>
+                </button>
+              ) : (
+                <div className="px-4 py-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-2xl text-xs font-bold flex items-center gap-2 shrink-0">
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  <span>Team Quota Active (1/1 Max)</span>
+                </div>
+              )}
+              <div className="flex items-center gap-3">
+                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 text-center min-w-[100px]">
+                  <div className="text-2xl font-black text-cyan-300">{stats.assigned_teams_count}</div>
+                  <div className="text-xs text-slate-300 font-medium">Assigned Squad</div>
+                </div>
+                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 text-center min-w-[100px]">
+                  <div className="text-2xl font-black text-emerald-300">{stats.total_students_mentored}</div>
+                  <div className="text-xs text-slate-300 font-medium">Mentees</div>
+                </div>
               </div>
             </div>
           </div>
@@ -267,13 +461,47 @@ const MentorDashboard = () => {
         {/* Tab 1: My Assigned Teams */}
         {activeTab === 'teams' && (
           <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">
+                  My Competition Squad ({assignedTeams.length}/1 Max)
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {assignedTeams.length === 0
+                    ? "You are authorized to form 1 student innovator team from your school."
+                    : "Your assigned competition team is active (1 team maximum per mentor)."}
+                </p>
+              </div>
+
+              {assignedTeams.length === 0 ? (
+                <button
+                  type="button"
+                  onClick={() => setCreateTeamModalOpen(true)}
+                  className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs self-start sm:self-auto"
+                >
+                  <PlusCircle className="w-4 h-4" /> Form Competition Team
+                </button>
+              ) : (
+                <span className="px-3 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold flex items-center gap-1.5 self-start sm:self-auto">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Quota Fulfilled (1/1 Team)
+                </span>
+              )}
+            </div>
+
             {assignedTeams.length === 0 ? (
               <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-xs">
                 <Users className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-                <h3 className="text-lg font-bold text-slate-800">No Teams Currently Assigned</h3>
-                <p className="text-sm text-slate-500 max-w-md mx-auto mt-1">
-                  Your school coordinator will assign student innovator teams to your profile as new squads are formed.
+                <h3 className="text-lg font-bold text-slate-800">No Competition Team Formed Yet</h3>
+                <p className="text-sm text-slate-500 max-w-md mx-auto mt-1 mb-5">
+                  As an authorized Teacher Mentor, you can form and mentor 1 student innovator squad (leader + up to 4 members) complete with student profiles.
                 </p>
+                <button
+                  type="button"
+                  onClick={() => setCreateTeamModalOpen(true)}
+                  className="px-6 py-3 bg-emerald-700 hover:bg-emerald-600 text-white rounded-2xl text-xs font-bold cursor-pointer inline-flex items-center gap-2 shadow-md transition-all"
+                >
+                  <PlusCircle className="w-4 h-4" /> Form Competition Team (0/1)
+                </button>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -302,22 +530,43 @@ const MentorDashboard = () => {
 
                       {/* Team Members */}
                       <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-100 mb-4">
-                        <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center justify-between">
+                        <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5 flex items-center justify-between">
                           <span>Team Roster ({team.members?.length || 0} students)</span>
                         </div>
-                        <div className="space-y-1.5">
+                        <div className="space-y-2">
                           {team.members && team.members.length > 0 ? (
                             team.members.map((m) => (
-                              <div key={m._id} className="flex items-center justify-between text-xs">
-                                <span className="font-semibold text-slate-800 flex items-center gap-1.5">
-                                  {m.is_leader && (
-                                    <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded text-[9px] font-bold uppercase">
-                                      Leader
-                                    </span>
+                              <div key={m._id} className="p-2.5 bg-white rounded-xl border border-slate-200/70 flex items-center justify-between gap-3 text-xs">
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  {m.photo ? (
+                                    <img src={m.photo} alt={m.full_name} className="w-8 h-8 rounded-full object-cover shrink-0 border border-slate-200" />
+                                  ) : (
+                                    <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center shrink-0 text-slate-600 font-bold text-[10px]">
+                                      {m.full_name?.charAt(0) || 'S'}
+                                    </div>
                                   )}
-                                  {m.full_name}
+                                  <div className="truncate">
+                                    <div className="font-bold text-slate-900 flex items-center gap-1.5 truncate">
+                                      <span className="truncate">{m.full_name}</span>
+                                      {m.is_leader && (
+                                        <span className="px-1.5 py-0.2 bg-amber-100 text-amber-800 rounded text-[9px] font-bold uppercase shrink-0">
+                                          Leader
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-[10px] text-slate-500 truncate">
+                                      {m.email} • {m.phone || m.mobile_no}
+                                    </div>
+                                    {(m.father_name || m.mother_name) && (
+                                      <div className="text-[10px] text-slate-400 truncate">
+                                        F: {m.father_name || 'N/A'} • M: {m.mother_name || 'N/A'}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                <span className="text-[11px] font-semibold text-slate-600 shrink-0 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                                  {m.grade || 'Student'}
                                 </span>
-                                <span className="text-slate-500">{m.grade || 'Student'}</span>
                               </div>
                             ))
                           ) : (
@@ -671,22 +920,40 @@ const MentorDashboard = () => {
 
                   {/* Student Members */}
                   <div className="mb-6">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-                      Registered Student Innovators
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2.5">
+                      Registered Student Innovators ({teamDetail.members?.length || 0})
                     </h4>
-                    <div className="space-y-2">
+                    <div className="space-y-2.5">
                       {teamDetail.members?.map((m) => (
-                        <div key={m._id} className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
-                          <div>
-                            <span className="font-bold text-slate-800">{m.full_name}</span>
-                            {m.is_leader && (
-                              <span className="ml-2 px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded text-[9px] font-bold uppercase">
-                                Team Leader
-                              </span>
+                        <div key={m._id} className="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex items-start justify-between gap-3 text-xs">
+                          <div className="flex items-center gap-3">
+                            {m.photo ? (
+                              <img src={m.photo} alt={m.full_name} className="w-12 h-12 rounded-xl object-cover shrink-0 border border-slate-200" />
+                            ) : (
+                              <div className="w-12 h-12 rounded-xl bg-slate-200 flex items-center justify-center shrink-0 text-slate-600 font-bold">
+                                {m.full_name?.charAt(0) || 'S'}
+                              </div>
                             )}
-                            <div className="text-[11px] text-slate-500 mt-0.5">{m.email || 'No email provided'}</div>
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-bold text-slate-900 text-sm">{m.full_name}</span>
+                                {m.is_leader && (
+                                  <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded text-[9px] font-bold uppercase">
+                                    Team Leader
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-[11px] text-slate-600 mt-0.5">
+                                <strong>Email:</strong> {m.email || 'N/A'} • <strong>Mobile:</strong> {m.phone || m.mobile_no || 'N/A'}
+                              </div>
+                              <div className="text-[11px] text-slate-500 mt-0.5">
+                                <strong>Father:</strong> {m.father_name || 'N/A'} • <strong>Mother:</strong> {m.mother_name || 'N/A'}
+                              </div>
+                            </div>
                           </div>
-                          <span className="font-mono text-slate-600">{m.grade || 'Class X'}</span>
+                          <span className="font-mono text-slate-700 bg-white px-2.5 py-1 rounded-lg border border-slate-200 font-bold shrink-0">
+                            {m.grade || 'Class X'}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -725,6 +992,501 @@ const MentorDashboard = () => {
                   </div>
                 </div>
               ) : null}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal: Form Competition Team (1 Team Quota per Mentor) */}
+      <AnimatePresence>
+        {createTeamModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 max-h-[92vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-full border border-emerald-200">
+                      Mentor Team Registration
+                    </span>
+                    <span className="px-2.5 py-0.5 bg-cyan-100 text-cyan-800 text-[11px] font-bold rounded-full font-mono">
+                      1 Team Maximum Quota
+                    </span>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-black text-slate-900">
+                    Form New Competition Team
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Mentor: <strong>{mentor.full_name || user?.name}</strong> • Institution: <strong>{mentor.school_name || 'Assam Partner School'}</strong>
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCreateTeamModalOpen(false)}
+                  className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateTeamSubmit} className="space-y-6 text-xs">
+                {/* Section 1: Team Details */}
+                <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200/80 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-bold text-slate-900 text-sm uppercase tracking-wider flex items-center gap-1.5">
+                      <Users className="w-4 h-4 text-cyan-700" />
+                      <span>1. Squad Identity & Category</span>
+                    </h4>
+                    <span className="text-[11px] text-rose-500 font-semibold">* All fields mandatory</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block font-bold uppercase text-slate-700 mb-1">
+                        Team Name <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Kaziranga AI Innovators"
+                        value={teamForm.team_name}
+                        onChange={(e) => setTeamForm({ ...teamForm, team_name: e.target.value })}
+                        className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-cyan-500 shadow-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold uppercase text-slate-700 mb-1">
+                        Competition Category <span className="text-rose-500">*</span>
+                      </label>
+                      <select
+                        value={teamForm.category}
+                        onChange={(e) => handleCategoryChange(e.target.value)}
+                        className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-cyan-500 shadow-xs font-semibold"
+                      >
+                        <option value="VI-VIII">Middle School (Classes VI - VIII)</option>
+                        <option value="IX-X">Secondary (Classes IX - X)</option>
+                        <option value="XI-XII">Higher Secondary (Classes XI - XII)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: Team Leader (Student 1) */}
+                <div className="bg-emerald-50/50 p-5 rounded-2xl border border-emerald-200/80 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 bg-emerald-700 text-white rounded-md text-[10px] font-bold uppercase">
+                        Primary Leader
+                      </span>
+                      <h4 className="font-bold text-emerald-950 text-sm">
+                        2. Team Leader Dossier
+                      </h4>
+                    </div>
+                    <span className="text-[11px] text-rose-600 font-bold">* All 7 Fields Required</span>
+                  </div>
+
+                  {/* Photo Upload with Preview */}
+                  <div className="p-4 bg-white rounded-xl border border-emerald-200">
+                    <label className="block font-bold uppercase text-[11px] text-emerald-950 mb-2">
+                      Student Photo <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="flex items-center gap-4">
+                      <div className="relative w-20 h-20 rounded-2xl overflow-hidden bg-slate-100 border-2 border-dashed border-emerald-300 flex items-center justify-center shrink-0 group shadow-xs">
+                        {teamForm.leader_photo ? (
+                          <>
+                            <img src={teamForm.leader_photo} alt="Leader" className="w-full h-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => setTeamForm({ ...teamForm, leader_photo: '' })}
+                              className="absolute inset-0 bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              title="Remove photo"
+                            >
+                              <Trash2 className="w-5 h-5 text-rose-300" />
+                            </button>
+                          </>
+                        ) : (
+                          <div className="flex flex-col items-center gap-1 text-slate-400">
+                            <Camera className="w-6 h-6 text-emerald-600" />
+                            <span className="text-[9px] font-bold text-emerald-700">Photo *</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex-1">
+                        <label className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold cursor-pointer transition-all shadow-xs">
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>{teamForm.leader_photo ? 'Replace Leader Photo' : 'Upload Student Photo *'}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (f) handlePhotoUpload(f, (base64) => setTeamForm({ ...teamForm, leader_photo: base64 }));
+                              e.target.value = '';
+                            }}
+                          />
+                        </label>
+                        <p className="text-[10px] text-slate-500 mt-1.5">
+                          Passport size or clear face photo (PNG, JPG, WEBP under 2MB).
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Leader fields */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold uppercase text-slate-700 mb-1">
+                        Student Full Name <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Ananya Goswami"
+                        value={teamForm.leader_name}
+                        onChange={(e) => setTeamForm({ ...teamForm, leader_name: e.target.value })}
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-emerald-500 shadow-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold uppercase text-slate-700 mb-1">
+                        Grade / Class <span className="text-rose-500">*</span>
+                      </label>
+                      <select
+                        value={teamForm.leader_grade}
+                        onChange={(e) => setTeamForm({ ...teamForm, leader_grade: e.target.value })}
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-emerald-500 shadow-xs font-medium"
+                      >
+                        {(CATEGORY_GRADES[teamForm.category] || ['Class IX', 'Class X']).map(g => (
+                          <option key={g} value={g}>{g}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold uppercase text-slate-700 mb-1">
+                        Father's Name <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Mr. Bhaskar Goswami"
+                        value={teamForm.leader_father_name}
+                        onChange={(e) => setTeamForm({ ...teamForm, leader_father_name: e.target.value })}
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-emerald-500 shadow-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold uppercase text-slate-700 mb-1">
+                        Mother's Name <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Mrs. Monali Goswami"
+                        value={teamForm.leader_mother_name}
+                        onChange={(e) => setTeamForm({ ...teamForm, leader_mother_name: e.target.value })}
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-emerald-500 shadow-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold uppercase text-slate-700 mb-1">
+                        Mobile Number <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="tel"
+                        required
+                        placeholder="+91 94350 XXXXX"
+                        value={teamForm.leader_phone}
+                        onChange={(e) => setTeamForm({ ...teamForm, leader_phone: e.target.value })}
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-emerald-500 shadow-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold uppercase text-slate-700 mb-1">
+                        Email ID <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        placeholder="student@school.edu"
+                        value={teamForm.leader_email}
+                        onChange={(e) => setTeamForm({ ...teamForm, leader_email: e.target.value })}
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-emerald-500 shadow-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 3: Additional Members (Optional, up to 4) */}
+                <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200/80 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-sm uppercase tracking-wider flex items-center gap-1.5">
+                        <Users className="w-4 h-4 text-cyan-700" />
+                        <span>3. Additional Squad Members ({teamForm.members.length}/4)</span>
+                      </h4>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Squad can include 1 leader + up to 4 additional members (max 5 students total).
+                      </p>
+                    </div>
+
+                    {teamForm.members.length < 4 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const defaultGrade = CATEGORY_GRADES[teamForm.category]?.[0] || 'Class IX';
+                          setTeamForm({
+                            ...teamForm,
+                            members: [
+                              ...teamForm.members,
+                              {
+                                name: '',
+                                email: '',
+                                phone: '',
+                                grade: defaultGrade,
+                                photo: '',
+                                father_name: '',
+                                mother_name: ''
+                              }
+                            ]
+                          });
+                        }}
+                        className="px-3 py-1.5 bg-cyan-800 hover:bg-cyan-700 text-white rounded-xl text-xs font-bold cursor-pointer inline-flex items-center gap-1 transition-all shadow-xs"
+                      >
+                        <PlusCircle className="w-3.5 h-3.5" />
+                        <span>Add Member</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {teamForm.members.length === 0 ? (
+                    <div className="p-4 bg-white rounded-xl border border-dashed border-slate-300 text-center text-slate-500 text-xs">
+                      No additional members added yet. Click <strong>"+ Add Member"</strong> above if this squad has teammates.
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {teamForm.members.map((member, idx) => (
+                        <div key={idx} className="p-4 bg-white rounded-2xl border border-slate-200 shadow-xs space-y-3">
+                          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                            <span className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                              <span className="w-5 h-5 rounded-full bg-cyan-100 text-cyan-800 flex items-center justify-center text-[10px] font-bold">
+                                {idx + 2}
+                              </span>
+                              Member #{idx + 1} Dossier
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updated = teamForm.members.filter((_, i) => i !== idx);
+                                setTeamForm({ ...teamForm, members: updated });
+                              }}
+                              className="text-rose-600 hover:text-rose-800 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" /> Remove
+                            </button>
+                          </div>
+
+                          {/* Member Photo */}
+                          <div className="flex items-center gap-3">
+                            <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center shrink-0 group shadow-xs">
+                              {member.photo ? (
+                                <>
+                                  <img src={member.photo} alt={`Member ${idx + 1}`} className="w-full h-full object-cover" />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const updated = [...teamForm.members];
+                                      updated[idx].photo = '';
+                                      setTeamForm({ ...teamForm, members: updated });
+                                    }}
+                                    className="absolute inset-0 bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                    title="Remove photo"
+                                  >
+                                    <Trash2 className="w-4 h-4 text-rose-300" />
+                                  </button>
+                                </>
+                              ) : (
+                                <Camera className="w-5 h-5 text-slate-400" />
+                              )}
+                            </div>
+                            <div>
+                              <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold cursor-pointer transition-all">
+                                <Upload className="w-3.5 h-3.5" />
+                                <span>{member.photo ? 'Change Photo' : 'Upload Member Photo *'}</span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const f = e.target.files?.[0];
+                                    if (f) {
+                                      handlePhotoUpload(f, (base64) => {
+                                        const updated = [...teamForm.members];
+                                        updated[idx].photo = base64;
+                                        setTeamForm({ ...teamForm, members: updated });
+                                      });
+                                    }
+                                    e.target.value = '';
+                                  }}
+                                />
+                              </label>
+                              <p className="text-[10px] text-slate-500 mt-1">Required photo (*)</p>
+                            </div>
+                          </div>
+
+                          {/* Member inputs */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <div>
+                              <label className="block font-bold uppercase text-[10px] text-slate-600 mb-1">
+                                Full Name <span className="text-rose-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                required
+                                placeholder="Student Full Name"
+                                value={member.name}
+                                onChange={(e) => {
+                                  const updated = [...teamForm.members];
+                                  updated[idx].name = e.target.value;
+                                  setTeamForm({ ...teamForm, members: updated });
+                                }}
+                                className="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs bg-white"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block font-bold uppercase text-[10px] text-slate-600 mb-1">
+                                Grade / Class <span className="text-rose-500">*</span>
+                              </label>
+                              <select
+                                value={member.grade}
+                                onChange={(e) => {
+                                  const updated = [...teamForm.members];
+                                  updated[idx].grade = e.target.value;
+                                  setTeamForm({ ...teamForm, members: updated });
+                                }}
+                                className="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs bg-white font-medium"
+                              >
+                                {(CATEGORY_GRADES[teamForm.category] || ['Class IX', 'Class X']).map(g => (
+                                  <option key={g} value={g}>{g}</option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div>
+                              <label className="block font-bold uppercase text-[10px] text-slate-600 mb-1">
+                                Father's Name <span className="text-rose-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                required
+                                placeholder="Father's Full Name"
+                                value={member.father_name}
+                                onChange={(e) => {
+                                  const updated = [...teamForm.members];
+                                  updated[idx].father_name = e.target.value;
+                                  setTeamForm({ ...teamForm, members: updated });
+                                }}
+                                className="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs bg-white"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block font-bold uppercase text-[10px] text-slate-600 mb-1">
+                                Mother's Name <span className="text-rose-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                required
+                                placeholder="Mother's Full Name"
+                                value={member.mother_name}
+                                onChange={(e) => {
+                                  const updated = [...teamForm.members];
+                                  updated[idx].mother_name = e.target.value;
+                                  setTeamForm({ ...teamForm, members: updated });
+                                }}
+                                className="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs bg-white"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block font-bold uppercase text-[10px] text-slate-600 mb-1">
+                                Mobile Number <span className="text-rose-500">*</span>
+                              </label>
+                              <input
+                                type="tel"
+                                required
+                                placeholder="+91 94350 XXXXX"
+                                value={member.phone}
+                                onChange={(e) => {
+                                  const updated = [...teamForm.members];
+                                  updated[idx].phone = e.target.value;
+                                  setTeamForm({ ...teamForm, members: updated });
+                                }}
+                                className="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs bg-white"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block font-bold uppercase text-[10px] text-slate-600 mb-1">
+                                Email ID <span className="text-rose-500">*</span>
+                              </label>
+                              <input
+                                type="email"
+                                required
+                                placeholder="member@school.edu"
+                                value={member.email}
+                                onChange={(e) => {
+                                  const updated = [...teamForm.members];
+                                  updated[idx].email = e.target.value;
+                                  setTeamForm({ ...teamForm, members: updated });
+                                }}
+                                className="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs bg-white"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer Controls */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-5 border-t border-slate-100">
+                  <div className="text-xs text-slate-500">
+                    Squad Total: <strong>{1 + teamForm.members.length} Innovator{teamForm.members.length > 0 ? 's' : ''}</strong> (1 Leader + {teamForm.members.length} Member{teamForm.members.length !== 1 ? 's' : ''})
+                  </div>
+
+                  <div className="flex items-center justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setCreateTeamModalOpen(false)}
+                      className="px-5 py-2.5 text-slate-600 hover:text-slate-800 font-bold rounded-xl"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submittingTeam}
+                      className="px-7 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl font-bold shadow-md flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+                    >
+                      {submittingTeam && <Loader2 className="w-4 h-4 animate-spin" />}
+                      <span>Register Team & Innovators</span>
+                    </button>
+                  </div>
+                </div>
+              </form>
             </motion.div>
           </div>
         )}

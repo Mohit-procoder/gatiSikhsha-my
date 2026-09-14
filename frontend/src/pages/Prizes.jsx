@@ -110,67 +110,102 @@ const Prizes = () => {
             Honoring student visionaries who demonstrate exemplary courage, technological ingenuity, and practical passion for Assam's progress.
           </p>
 
-          {/* Official Committee Disclaimer */}
-          <div className="mt-8 max-w-xl mx-auto p-4 rounded-2xl bg-amber-50/90 border border-amber-200/90 flex items-center justify-center gap-3 text-xs text-amber-950 font-semibold shadow-xs">
-            <Info className="w-4 h-4 text-amber-700 shrink-0" />
-            <span>Official prize details and monetary endowments will be announced by the organizing committee.</span>
+          {/* Official Prize Pool Banner */}
+          <div className="mt-8 max-w-2xl mx-auto p-5 rounded-2xl bg-gradient-to-r from-emerald-50 via-amber-50 to-blue-50 border border-amber-300 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-amber-500 text-slate-950 font-black shrink-0">
+                <Trophy className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-xs font-extrabold uppercase tracking-wider text-amber-900 block">
+                  State Innovation Prize Pool: ₹52.5 Lakhs
+                </span>
+                <span className="text-xs text-slate-600">
+                  Awarded to 30 Teams (10 Teams / Category) across Assam
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-xs font-bold text-emerald-800 bg-white/90 px-3 py-1.5 rounded-xl border border-emerald-200">
+              <span>3 Categories • 30 Winners</span>
+            </div>
           </div>
         </section>
 
         {/* Prize Category Cards */}
         <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 space-y-12">
-          {prizeStructure.map((cat) => (
-            <div key={cat.category} className="p-8 sm:p-10 rounded-3xl bg-white border border-slate-200/90 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-8">
-                <div>
-                  <span className={`text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border ${cat.badgeColor}`}>
-                    {cat.category}
-                  </span>
-                  <h2 className="text-2xl font-black text-slate-900 mt-2">{cat.subtitle}</h2>
-                </div>
-              </div>
+          {prizeStructure.map((cat, idx) => {
+            const prizeBreakdowns = [
+              { total: '₹7.5 Lakhs', top5: '₹1 Lakh each (Top 5)', next5: '₹50,000 each (Next 5)' },
+              { total: '₹15 Lakhs', top5: '₹2 Lakhs each (Top 5)', next5: '₹1 Lakh each (Next 5)' },
+              { total: '₹30 Lakhs', top5: '₹4 Lakhs each (Top 5)', next5: '₹2 Lakhs each (Next 5)' },
+            ];
+            const currentPool = prizeBreakdowns[idx];
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {cat.tiers.map((t) => {
-                  const Icon = t.icon;
-                  return (
-                    <div key={t.place} className="p-6 rounded-2xl bg-[#faf8f5] border border-slate-200/80 shadow-xs flex flex-col justify-between">
+            return (
+              <div key={cat.category} className="p-8 sm:p-10 rounded-3xl bg-white border border-slate-200/90 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-8">
+                  <div>
+                    <span className={`text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border ${cat.badgeColor}`}>
+                      {cat.category}
+                    </span>
+                    <h2 className="text-2xl font-black text-slate-900 mt-2">{cat.subtitle}</h2>
+                  </div>
+                  {currentPool && (
+                    <div className="p-3 rounded-2xl bg-[#faf8f5] border border-slate-200 flex items-center gap-4 text-xs">
                       <div>
-                        <div className="flex items-center justify-between gap-2 mb-4">
-                          <span className="text-xs font-extrabold uppercase text-slate-500 tracking-wider">
-                            {t.place}
-                          </span>
-                          <div className={`p-2.5 rounded-xl ${t.iconColor}`}>
-                            <Icon className="w-5 h-5" />
-                          </div>
-                        </div>
-
-                        <h3 className="text-base font-bold text-slate-900 leading-snug">
-                          {t.title}
-                        </h3>
-
-                        <ul className="mt-4 space-y-2 text-xs text-slate-600">
-                          {t.perks.map((p, i) => (
-                            <li key={i} className="flex items-start gap-2">
-                              <Star className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
-                              <span>{p}</span>
-                            </li>
-                          ))}
-                        </ul>
+                        <span className="text-slate-400 font-semibold block">Total Category Pool</span>
+                        <span className="text-base font-black text-slate-900">{currentPool.total}</span>
+                      </div>
+                      <div className="border-l border-slate-200 pl-4 space-y-0.5">
+                        <div className="font-bold text-emerald-800">🏆 {currentPool.top5}</div>
+                        <div className="font-semibold text-slate-600">🎖️ {currentPool.next5}</div>
                       </div>
                     </div>
-                  );
-                })}
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {cat.tiers.map((t) => {
+                    const Icon = t.icon;
+                    return (
+                      <div key={t.place} className="p-6 rounded-2xl bg-[#faf8f5] border border-slate-200/80 shadow-xs flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center justify-between gap-2 mb-4">
+                            <span className="text-xs font-extrabold uppercase text-slate-500 tracking-wider">
+                              {t.place}
+                            </span>
+                            <div className={`p-2.5 rounded-xl ${t.iconColor}`}>
+                              <Icon className="w-5 h-5" />
+                            </div>
+                          </div>
+
+                          <h3 className="text-base font-bold text-slate-900 leading-snug">
+                            {t.title}
+                          </h3>
+
+                          <ul className="mt-4 space-y-2 text-xs text-slate-600">
+                            {t.perks.map((p, i) => (
+                              <li key={i} className="flex items-start gap-2">
+                                <Star className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                                <span>{p}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {/* Certificate for all participants */}
           <div className="p-8 rounded-3xl bg-slate-900 text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="space-y-1">
               <h3 className="text-xl font-bold text-white">Certificate of Participation for All Students</h3>
               <p className="text-xs sm:text-sm text-slate-300">
-                Every verified student who completes the 20-Hour Bootcamp and participates in the online assessment receives an official Certificate of Participation from IHFC IIT Delhi and Samagra Shiksha, Assam.
+                Every verified student who completes the 20-Hour Bootcamp and participates in the online assessment receives an official Certificate of Participation from Innovation hub for cobotics (IHFC) and ASOM, Assam.
               </p>
             </div>
             <Link

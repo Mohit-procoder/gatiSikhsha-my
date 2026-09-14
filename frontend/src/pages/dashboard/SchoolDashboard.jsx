@@ -37,32 +37,15 @@ const SchoolDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   // Modals
-  const [createTeamOpen, setCreateTeamOpen] = useState(false);
   const [createMentorOpen, setCreateMentorOpen] = useState(false);
-  const [addStudentOpen, setAddStudentOpen] = useState(false);
   const [viewTeamOpen, setViewTeamOpen] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
   const [editProfileOpen, setEditProfileOpen] = useState(false);
 
   // Password visibility toggles
-  const [showNewMentorPassword, setShowNewMentorPassword] = useState(false);
   const [showMentorModalPassword, setShowMentorModalPassword] = useState(false);
 
   // Form states
-  const [teamForm, setTeamForm] = useState({
-    team_name: '',
-    category: 'IX-X',
-    mentor_mode: 'existing', // 'existing' | 'new'
-    mentor_id: '',
-    new_mentor: { name: '', email: '', password: '', phone: '', designation: 'Innovation Mentor' },
-    leader_name: '',
-    leader_email: '',
-    leader_phone: '',
-    leader_grade: 'Class X',
-    members: [{ name: '', email: '', grade: 'Class X' }]
-  });
-  const [submittingTeam, setSubmittingTeam] = useState(false);
-
   const [mentorForm, setMentorForm] = useState({
     name: '',
     email: '',
@@ -71,17 +54,6 @@ const SchoolDashboard = () => {
     password: ''
   });
   const [submittingMentor, setSubmittingMentor] = useState(false);
-
-  const [studentForm, setStudentForm] = useState({
-    name: '',
-    email: '',
-    grade: 'Class IX',
-    phone: '',
-    gender: 'Male',
-    age: '',
-    team_id: ''
-  });
-  const [submittingStudent, setSubmittingStudent] = useState(false);
 
   const [profileForm, setProfileForm] = useState({
     official_phone: '',
@@ -145,54 +117,7 @@ const SchoolDashboard = () => {
     fetchSchoolData();
   }, []);
 
-  const handleCreateTeam = async (e) => {
-    e.preventDefault();
-    setSubmittingTeam(true);
 
-    const validMembers = teamForm.members.filter(m => m.name.trim());
-    const payload = {
-      team_name: teamForm.team_name,
-      category: teamForm.category,
-      leader_name: teamForm.leader_name,
-      leader_email: teamForm.leader_email,
-      leader_phone: teamForm.leader_phone,
-      leader_grade: teamForm.leader_grade,
-      members: validMembers
-    };
-
-    if (teamForm.mentor_mode === 'existing' && teamForm.mentor_id) {
-      payload.mentor_id = teamForm.mentor_id;
-    } else if (teamForm.mentor_mode === 'new' && teamForm.new_mentor.name) {
-      payload.new_mentor = {
-        ...teamForm.new_mentor,
-        password: teamForm.new_mentor.password || 'Mentor@123'
-      };
-    }
-
-    try {
-      const res = await api.post('/teams', payload);
-      addToast(res.data.message || 'Team created successfully!', 'success');
-      setCreateTeamOpen(false);
-      setTeamForm({
-        team_name: '',
-        category: 'IX-X',
-        mentor_mode: 'existing',
-        mentor_id: '',
-        new_mentor: { name: '', email: '', password: '', phone: '', designation: 'Innovation Mentor' },
-        leader_name: '',
-        leader_email: '',
-        leader_phone: '',
-        leader_grade: 'Class X',
-        members: [{ name: '', email: '', grade: 'Class X' }]
-      });
-      fetchSchoolData();
-    } catch (err) {
-      const msg = err.response?.data?.error?.message || err.message || 'Failed to create team.';
-      addToast(msg, 'error');
-    } finally {
-      setSubmittingTeam(false);
-    }
-  };
 
   const handleCreateMentor = async (e) => {
     e.preventDefault();
@@ -221,30 +146,7 @@ const SchoolDashboard = () => {
     }
   };
 
-  const handleAddStudent = async (e) => {
-    e.preventDefault();
-    setSubmittingStudent(true);
-    try {
-      const res = await api.post('/schools/students', studentForm);
-      addToast(res.data.message || 'Student innovator registered!', 'success');
-      setAddStudentOpen(false);
-      setStudentForm({
-        name: '',
-        email: '',
-        grade: 'Class IX',
-        phone: '',
-        gender: 'Male',
-        age: '',
-        team_id: ''
-      });
-      fetchSchoolData();
-    } catch (err) {
-      const msg = err.response?.data?.error?.message || err.message || 'Failed to add student.';
-      addToast(msg, 'error');
-    } finally {
-      setSubmittingStudent(false);
-    }
-  };
+
 
   const handleRemoveStudent = async (studentId) => {
     if (!window.confirm('Are you sure you want to remove this student?')) return;
@@ -378,21 +280,12 @@ const SchoolDashboard = () => {
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                onClick={() => setCreateTeamOpen(true)}
-                disabled={!isApproved}
-                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
-              >
-                <PlusCircle className="w-4 h-4" />
-                <span>CREATE TEAM</span>
-              </button>
-              <button
-                type="button"
                 onClick={() => setCreateMentorOpen(true)}
                 disabled={!isApproved}
-                className="px-4 py-2.5 bg-white/10 hover:bg-white/20 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all border border-white/10 flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
+                className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
               >
-                <Compass className="w-4 h-4 text-cyan-300" />
-                <span>Add Mentor</span>
+                <Compass className="w-4 h-4 text-white" />
+                <span>Onboard Teacher Mentor</span>
               </button>
             </div>
           </div>
@@ -509,41 +402,25 @@ const SchoolDashboard = () => {
             <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
               <h3 className="text-lg font-bold text-slate-900 mb-2">School Innovation Controls</h3>
               <p className="text-xs sm:text-sm text-slate-600 mb-6">
-                Form new competition teams, onboard faculty mentors, manage student innovator rosters, and update official school records.
+                Onboard faculty mentors to guide student teams, monitor competition squads, and manage official institutional records.
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <button
-                  type="button"
-                  onClick={() => setCreateTeamOpen(true)}
-                  disabled={!isApproved}
-                  className="p-4 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-left transition-all cursor-pointer disabled:opacity-50"
-                >
-                  <PlusCircle className="w-6 h-6 text-emerald-700 mb-2" />
-                  <div className="font-bold text-sm text-emerald-950">Create Competition Team</div>
-                  <div className="text-xs text-emerald-800 mt-0.5">Define category, assign mentor, and enroll student squad.</div>
-                </button>
-
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <button
                   type="button"
                   onClick={() => setCreateMentorOpen(true)}
                   disabled={!isApproved}
-                  className="p-4 rounded-2xl bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 text-left transition-all cursor-pointer disabled:opacity-50"
+                  className="p-5 rounded-2xl bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 text-left transition-all cursor-pointer disabled:opacity-50"
                 >
                   <Compass className="w-6 h-6 text-cyan-700 mb-2" />
                   <div className="font-bold text-sm text-cyan-950">Onboard Faculty Mentor</div>
-                  <div className="text-xs text-cyan-800 mt-0.5">Generate Mentor ID and credentials for team guidance.</div>
+                  <div className="text-xs text-cyan-800 mt-0.5">Generate Mentor ID and credentials for team creation and guidance.</div>
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => setAddStudentOpen(true)}
-                  disabled={!isApproved}
-                  className="p-4 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-left transition-all cursor-pointer disabled:opacity-50"
-                >
-                  <UserPlus className="w-6 h-6 text-slate-700 mb-2" />
-                  <div className="font-bold text-sm text-slate-900">Register Student Innovator</div>
-                  <div className="text-xs text-slate-600 mt-0.5">Add individual student records to the institutional pool.</div>
-                </button>
+                <div className="p-5 rounded-2xl bg-emerald-50/70 border border-emerald-200 text-left">
+                  <ShieldCheck className="w-6 h-6 text-emerald-700 mb-2" />
+                  <div className="font-bold text-sm text-emerald-950">Mentor-Led Team Registration</div>
+                  <div className="text-xs text-emerald-800 mt-0.5">Team creation and student registration are managed directly by your school's Teacher Mentors (1 team max per mentor).</div>
+                </div>
               </div>
             </div>
           </div>
@@ -553,15 +430,10 @@ const SchoolDashboard = () => {
         {activeTab === 'teams' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-900">Competition Teams ({teams.length})</h3>
-              <button
-                type="button"
-                onClick={() => setCreateTeamOpen(true)}
-                disabled={!isApproved}
-                className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
-              >
-                <PlusCircle className="w-4 h-4" /> Create Team
-              </button>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Competition Teams ({teams.length})</h3>
+                <p className="text-xs text-slate-500 mt-0.5">Formed and mentored by your school's faculty mentors (1 team max per mentor)</p>
+              </div>
             </div>
 
             {teams.length === 0 ? (
@@ -569,15 +441,15 @@ const SchoolDashboard = () => {
                 <Users className="w-12 h-12 text-slate-400 mx-auto mb-3" />
                 <h3 className="text-lg font-bold text-slate-800">No Teams Formed Yet</h3>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-4">
-                  Create student teams across categories (VI-VIII, IX-X, XI-XII) and assign faculty mentors.
+                  Onboard faculty mentors from your school. Mentors log in to form their squad and register students with required dossiers.
                 </p>
                 <button
                   type="button"
-                  onClick={() => setCreateTeamOpen(true)}
+                  onClick={() => setCreateMentorOpen(true)}
                   disabled={!isApproved}
-                  className="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold cursor-pointer inline-flex items-center gap-1.5"
+                  className="px-5 py-2.5 bg-cyan-800 hover:bg-cyan-700 text-white rounded-xl text-xs font-bold cursor-pointer inline-flex items-center gap-1.5"
                 >
-                  <PlusCircle className="w-4 h-4" /> Form First Team
+                  <Compass className="w-4 h-4" /> Onboard Faculty Mentor
                 </button>
               </div>
             ) : (
@@ -712,15 +584,10 @@ const SchoolDashboard = () => {
         {activeTab === 'students' && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <h3 className="text-lg font-bold text-slate-900">Student Directory ({students.length})</h3>
-              <button
-                type="button"
-                onClick={() => setAddStudentOpen(true)}
-                disabled={!isApproved}
-                className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
-              >
-                <UserPlus className="w-4 h-4" /> Add Student Innovator
-              </button>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Student Directory ({students.length})</h3>
+                <p className="text-xs text-slate-500 mt-0.5">Official student innovator roster enrolled by your school's Teacher Mentors</p>
+              </div>
             </div>
 
             {/* Filter Bar */}
@@ -857,290 +724,6 @@ const SchoolDashboard = () => {
         )}
       </main>
 
-      {/* Modal: Create Team */}
-      <AnimatePresence>
-        {createTeamOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto"
-            >
-              <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900">Form New Competition Team</h3>
-                  <p className="text-xs text-slate-500">School: {school?.school_name} • District: {school?.district}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setCreateTeamOpen(false)}
-                  className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <form onSubmit={handleCreateTeam} className="space-y-4 text-xs">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block font-bold uppercase tracking-wider text-slate-700 mb-1">Team Name *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Brahmaputra EcoTech"
-                      value={teamForm.team_name}
-                      onChange={(e) => setTeamForm({ ...teamForm, team_name: e.target.value })}
-                      className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-bold uppercase tracking-wider text-slate-700 mb-1">Competition Category *</label>
-                    <select
-                      value={teamForm.category}
-                      onChange={(e) => setTeamForm({ ...teamForm, category: e.target.value })}
-                      className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-emerald-500"
-                    >
-                      <option value="VI-VIII">Middle School (Classes VI - VIII)</option>
-                      <option value="IX-X">Secondary (Classes IX - X)</option>
-                      <option value="XI-XII">Higher Secondary (Classes XI - XII)</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Mentor Assignment Selection */}
-                <div className="p-4 bg-cyan-50/60 rounded-2xl border border-cyan-100">
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block font-bold uppercase tracking-wider text-cyan-950 text-[11px]">Faculty Mentor Assignment</label>
-                    <span className="text-[10px] text-cyan-800 font-semibold bg-cyan-100/80 px-2 py-0.5 rounded-md">Required</span>
-                  </div>
-                  <div className="flex items-center gap-4 mb-3">
-                    <label className="flex items-center gap-1.5 cursor-pointer font-bold text-cyan-900">
-                      <input
-                        type="radio"
-                        name="mentor_mode"
-                        checked={teamForm.mentor_mode === 'existing'}
-                        onChange={() => setTeamForm({ ...teamForm, mentor_mode: 'existing' })}
-                      />
-                      Select Existing Mentor
-                    </label>
-                    <label className="flex items-center gap-1.5 cursor-pointer font-bold text-cyan-900">
-                      <input
-                        type="radio"
-                        name="mentor_mode"
-                        checked={teamForm.mentor_mode === 'new'}
-                        onChange={() => setTeamForm({ ...teamForm, mentor_mode: 'new' })}
-                      />
-                      Onboard New Mentor
-                    </label>
-                  </div>
-
-                  {teamForm.mentor_mode === 'existing' ? (
-                    <div className="space-y-2">
-                      <select
-                        value={teamForm.mentor_id}
-                        onChange={(e) => setTeamForm({ ...teamForm, mentor_id: e.target.value })}
-                        className="w-full px-3.5 py-2 text-xs rounded-xl border border-cyan-300 bg-white focus:ring-2 focus:ring-cyan-500"
-                      >
-                        <option value="">-- Choose school mentor --</option>
-                        {mentors.map(m => (
-                          <option key={m._id} value={m._id}>{m.full_name} ({m.designation}) — {m.email}</option>
-                        ))}
-                      </select>
-                      {teamForm.mentor_id ? (
-                        <div className="p-2.5 bg-cyan-100/70 rounded-xl border border-cyan-200 text-[11px] text-cyan-950 flex items-start gap-2">
-                          <Info className="w-4 h-4 text-cyan-700 shrink-0 mt-0.5" />
-                          <div>
-                            <strong>Mentor Login Credentials:</strong> Mentor will log in to their dashboard at <code className="bg-white/90 px-1.5 py-0.5 rounded text-cyan-950 font-bold border border-cyan-300">/login/mentor</code> using their registered email: <strong>{mentors.find(m => m._id === teamForm.mentor_id)?.email}</strong>.
-                          </div>
-                        </div>
-                      ) : (
-                        <p className="text-[10px] text-cyan-800">Assign a registered mentor or switch to "Onboard New Mentor" to create login credentials.</p>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <div>
-                          <label className="block font-bold text-[10px] uppercase text-cyan-950 mb-1">Mentor Full Name *</label>
-                          <input
-                            type="text"
-                            required
-                            placeholder="e.g. Dr. Subhash Sarma"
-                            value={teamForm.new_mentor.name}
-                            onChange={(e) => setTeamForm({ ...teamForm, new_mentor: { ...teamForm.new_mentor, name: e.target.value } })}
-                            className="w-full px-3 py-2 text-xs rounded-xl border border-cyan-300 bg-white focus:ring-2 focus:ring-cyan-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block font-bold text-[10px] uppercase text-cyan-950 mb-1">Mentor Email (Login Username) *</label>
-                          <input
-                            type="email"
-                            required
-                            placeholder="mentor@school.edu"
-                            value={teamForm.new_mentor.email}
-                            onChange={(e) => setTeamForm({ ...teamForm, new_mentor: { ...teamForm.new_mentor, email: e.target.value } })}
-                            className="w-full px-3 py-2 text-xs rounded-xl border border-cyan-300 bg-white focus:ring-2 focus:ring-cyan-500"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <div>
-                          <label className="block font-bold text-[10px] uppercase text-cyan-950 mb-1">Mentor Login Password *</label>
-                          <div className="relative">
-                            <input
-                              type={showNewMentorPassword ? 'text' : 'password'}
-                              required
-                              placeholder="Set mentor login password"
-                              value={teamForm.new_mentor.password}
-                              onChange={(e) => setTeamForm({ ...teamForm, new_mentor: { ...teamForm.new_mentor, password: e.target.value } })}
-                              className="w-full px-3 py-2 text-xs rounded-xl border border-cyan-300 bg-white pr-9 focus:ring-2 focus:ring-cyan-500"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowNewMentorPassword(!showNewMentorPassword)}
-                              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-cyan-700 hover:text-cyan-900 cursor-pointer"
-                            >
-                              {showNewMentorPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                            </button>
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block font-bold text-[10px] uppercase text-cyan-950 mb-1">Designation / Role</label>
-                          <input
-                            type="text"
-                            placeholder="e.g. Science Teacher / ATAL Lead"
-                            value={teamForm.new_mentor.designation}
-                            onChange={(e) => setTeamForm({ ...teamForm, new_mentor: { ...teamForm.new_mentor, designation: e.target.value } })}
-                            className="w-full px-3 py-2 text-xs rounded-xl border border-cyan-300 bg-white focus:ring-2 focus:ring-cyan-500"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="p-2.5 bg-cyan-100/70 rounded-xl border border-cyan-200 text-[11px] text-cyan-950 flex items-start gap-2">
-                        <KeyRound className="w-4 h-4 text-cyan-700 shrink-0 mt-0.5" />
-                        <div>
-                          <strong>Mentor Login Access:</strong> This mentor will use the email <strong>{teamForm.new_mentor.email || '(email above)'}</strong> and the password configured here to log into the Mentor Portal at <code className="bg-white/90 px-1 py-0.5 rounded text-cyan-950 font-bold border border-cyan-300">/login/mentor</code> to view assigned squads and submit guidance.
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Team Leader */}
-                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
-                  <h4 className="font-bold text-slate-800 uppercase tracking-wider mb-2">Team Leader (Student 1) *</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    <input
-                      type="text"
-                      required
-                      placeholder="Leader Full Name"
-                      value={teamForm.leader_name}
-                      onChange={(e) => setTeamForm({ ...teamForm, leader_name: e.target.value })}
-                      className="px-3 py-1.5 rounded-xl border border-slate-300 bg-white"
-                    />
-                    <input
-                      type="email"
-                      required
-                      placeholder="Leader Email"
-                      value={teamForm.leader_email}
-                      onChange={(e) => setTeamForm({ ...teamForm, leader_email: e.target.value })}
-                      className="px-3 py-1.5 rounded-xl border border-slate-300 bg-white"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Class / Grade"
-                      value={teamForm.leader_grade}
-                      onChange={(e) => setTeamForm({ ...teamForm, leader_grade: e.target.value })}
-                      className="px-3 py-1.5 rounded-xl border border-slate-300 bg-white"
-                    />
-                  </div>
-                </div>
-
-                {/* Teammates */}
-                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-bold text-slate-800 uppercase tracking-wider">Additional Members (Max 4)</h4>
-                    {teamForm.members.length < 4 && (
-                      <button
-                        type="button"
-                        onClick={() => setTeamForm({
-                          ...teamForm,
-                          members: [...teamForm.members, { name: '', email: '', grade: teamForm.leader_grade }]
-                        })}
-                        className="text-emerald-700 font-bold hover:underline"
-                      >
-                        + Add Member
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    {teamForm.members.map((m, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          placeholder={`Member ${idx + 2} Name`}
-                          value={m.name}
-                          onChange={(e) => {
-                            const newM = [...teamForm.members];
-                            newM[idx].name = e.target.value;
-                            setTeamForm({ ...teamForm, members: newM });
-                          }}
-                          className="flex-1 px-3 py-1.5 rounded-xl border border-slate-300 bg-white"
-                        />
-                        <input
-                          type="email"
-                          placeholder="Email (Optional)"
-                          value={m.email}
-                          onChange={(e) => {
-                            const newM = [...teamForm.members];
-                            newM[idx].email = e.target.value;
-                            setTeamForm({ ...teamForm, members: newM });
-                          }}
-                          className="flex-1 px-3 py-1.5 rounded-xl border border-slate-300 bg-white"
-                        />
-                        {teamForm.members.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newM = teamForm.members.filter((_, i) => i !== idx);
-                              setTeamForm({ ...teamForm, members: newM });
-                            }}
-                            className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => setCreateTeamOpen(false)}
-                    className="px-4 py-2 text-slate-600 font-bold hover:text-slate-800"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submittingTeam}
-                    className="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl font-bold shadow-md flex items-center gap-1.5 disabled:opacity-50"
-                  >
-                    {submittingTeam && <Loader2 className="w-4 h-4 animate-spin" />}
-                    <span>Create Competition Team</span>
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       {/* Modal: Create Mentor */}
       <AnimatePresence>
@@ -1255,118 +838,7 @@ const SchoolDashboard = () => {
         )}
       </AnimatePresence>
 
-      {/* Modal: Add Student */}
-      <AnimatePresence>
-        {addStudentOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200"
-            >
-              <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
-                <h3 className="text-lg font-bold text-slate-900">Register Student Innovator</h3>
-                <button
-                  type="button"
-                  onClick={() => setAddStudentOpen(false)}
-                  className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
 
-              <form onSubmit={handleAddStudent} className="space-y-4 text-xs">
-                <div>
-                  <label className="block font-bold uppercase text-slate-700 mb-1">Student Full Name *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Aarav Das"
-                    value={studentForm.name}
-                    onChange={(e) => setStudentForm({ ...studentForm, name: e.target.value })}
-                    className="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-bold uppercase text-slate-700 mb-1">Grade / Class *</label>
-                    <select
-                      value={studentForm.grade}
-                      onChange={(e) => setStudentForm({ ...studentForm, grade: e.target.value })}
-                      className="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white"
-                    >
-                      <option value="Class VI">Class VI</option>
-                      <option value="Class VII">Class VII</option>
-                      <option value="Class VIII">Class VIII</option>
-                      <option value="Class IX">Class IX</option>
-                      <option value="Class X">Class X</option>
-                      <option value="Class XI">Class XI</option>
-                      <option value="Class XII">Class XII</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block font-bold uppercase text-slate-700 mb-1">Gender</label>
-                    <select
-                      value={studentForm.gender}
-                      onChange={(e) => setStudentForm({ ...studentForm, gender: e.target.value })}
-                      className="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white"
-                    >
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block font-bold uppercase text-slate-700 mb-1">Email (Optional)</label>
-                  <input
-                    type="email"
-                    placeholder="student@afip.demo"
-                    value={studentForm.email}
-                    onChange={(e) => setStudentForm({ ...studentForm, email: e.target.value })}
-                    className="w-full px-3.5 py-2 rounded-xl border border-slate-300"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold uppercase text-slate-700 mb-1">Assign to Team (Optional)</label>
-                  <select
-                    value={studentForm.team_id}
-                    onChange={(e) => setStudentForm({ ...studentForm, team_id: e.target.value })}
-                    className="w-full px-3.5 py-2 rounded-xl border border-slate-300 bg-white"
-                  >
-                    <option value="">-- No Team Assignment --</option>
-                    {teams.map(t => (
-                      <option key={t._id} value={t._id}>{t.team_name} ({t.category})</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => setAddStudentOpen(false)}
-                    className="px-4 py-2 text-slate-600 font-bold"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submittingStudent}
-                    className="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl font-bold flex items-center gap-1.5 disabled:opacity-50"
-                  >
-                    {submittingStudent && <Loader2 className="w-4 h-4 animate-spin" />}
-                    <span>Add Student</span>
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       {/* Modal: Edit Profile */}
       <AnimatePresence>

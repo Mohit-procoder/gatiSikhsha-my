@@ -31,7 +31,7 @@ const Footer = () => {
             </p>
             <div className="flex items-center gap-2 text-xs text-amber-400 font-medium">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Technology Innovation Hub @ IIT Delhi &amp; Samagra Shiksha, Assam</span>
+              <span>Innovation hub for cobotics (IHFC) &amp; ASOM, Assam</span>
             </div>
           </div>
 

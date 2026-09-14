@@ -218,7 +218,7 @@ const Hero = () => {
           >
             <span className="flex h-2 w-2 rounded-full bg-emerald-600 animate-pulse" />
             <span className="text-xs font-semibold text-slate-700">
-              Joint Initiative of <strong className="text-emerald-900 font-bold">IHFC IIT Delhi</strong> &amp; <strong className="text-amber-800 font-bold">Samagra Shiksha, Assam</strong>
+              Joint Initiative of <strong className="text-emerald-900 font-bold">Innovation hub for cobotics (IHFC)</strong> &amp; <strong className="text-amber-800 font-bold">ASOM, Assam</strong>
             </span>
           </motion.div>
 
@@ -231,10 +231,10 @@ const Hero = () => {
             <div className="text-xs sm:text-sm font-extrabold uppercase tracking-[0.25em] text-amber-700 mb-3">
               Student Innovation Challenge
             </div>
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-slate-900 tracking-tight leading-[1.08]">
-              ASSAM FUTURE <br />
-              <span className="bg-gradient-to-r from-emerald-800 via-teal-700 to-amber-600 bg-clip-text text-transparent">
-                INNOVATION PROGRAM
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.15]">
+              Brahmaputra Innovation Challenge <br />
+              <span className="bg-gradient-to-r from-emerald-800 via-teal-700 to-amber-600 bg-clip-text text-transparent text-2xl sm:text-4xl lg:text-5xl block mt-2">
+                Viksit Assam and Viksit Bharat 2047
               </span>
             </h1>
           </motion.div>

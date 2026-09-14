@@ -62,13 +62,13 @@ const Navbar = () => {
           <Link to="/" className="flex items-center gap-3 sm:gap-6 group">
             <img
               src={ihfcLogo}
-              alt="IHFC - Technology Innovation Hub IIT Delhi"
+              alt="Innovation hub for cobotics (IHFC)"
               className="h-8 sm:h-10 w-auto object-contain transition-transform group-hover:scale-105"
             />
             <div className="h-6 sm:h-8 w-px bg-slate-300/80" />
             <img
               src={samagraLogo}
-              alt="Samagra Shiksha, Assam"
+              alt="ASOM, Assam"
               className="h-8 sm:h-10 w-auto object-contain transition-transform group-hover:scale-105"
             />
           </Link>

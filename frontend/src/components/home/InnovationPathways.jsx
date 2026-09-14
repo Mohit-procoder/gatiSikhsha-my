@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { FileText, Box, Rocket, Globe } from 'lucide-react';
+import { FileText, Box, Rocket, Globe, Trophy, Award, Medal, Sparkles, CheckCircle2 } from 'lucide-react';
 
 // Custom crisp SVG for Copyright / Patent icon
 const CopyrightIcon = ({ className = "w-6 h-6 text-white" }) => (
@@ -296,8 +296,8 @@ const InnovationPathways = () => {
             <h2 className="text-2xl sm:text-3xl lg:text-[34px] font-black text-[#0a2540] tracking-tight leading-tight">
               Innovation Acceleration Pathways
             </h2>
-            <p className="mt-1 text-sm sm:text-base lg:text-lg font-medium text-[#1e3a8a]/85">
-              For selected high-potential projects
+            <p className="mt-1 text-sm sm:text-base lg:text-lg font-semibold text-[#1e3a8a]">
+              For high potential students Ideas
             </p>
           </div>
 
@@ -362,17 +362,14 @@ const InnovationPathways = () => {
                   >
                     <div className="w-full h-full rounded-full bg-white border border-sky-100/90 shadow-sm flex flex-col items-center justify-center text-center p-3">
                       <TeamSilhouetteIcon
-                        className="w-9 h-9 lg:w-11 lg:h-11 text-[#0a2540] mb-1.5"
+                        className="w-9 h-9 lg:w-11 lg:h-11 text-[#0a2540] mb-2"
                         fill="#0a2540"
                       />
-                      <span className="text-[11px] lg:text-xs font-bold text-[#0a2540] leading-tight">
-                        Selected
+                      <span className="text-sm lg:text-base xl:text-lg font-black text-[#0a2540] leading-tight tracking-tight">
+                        High Potential
                       </span>
-                      <span className="text-xs lg:text-sm xl:text-[15px] font-black text-[#0a2540] leading-tight tracking-tight">
-                        High-Potential
-                      </span>
-                      <span className="text-[11px] lg:text-xs font-bold text-[#0a2540] leading-tight">
-                        Student Projects
+                      <span className="text-xs lg:text-sm font-bold text-[#0a2540] leading-tight mt-0.5">
+                        Students Ideas
                       </span>
                     </div>
                   </div>
@@ -400,15 +397,12 @@ const InnovationPathways = () => {
             <div className="flex justify-center mb-6">
               <div className="w-[165px] h-[165px] rounded-full border-2 border-[#bae6fd] bg-[#e8f4fc]/80 p-2 flex items-center justify-center shadow-sm">
                 <div className="w-full h-full rounded-full bg-white border border-sky-100 shadow-sm flex flex-col items-center justify-center text-center p-2.5">
-                  <TeamSilhouetteIcon className="w-8 h-8 text-[#0a2540] mb-1" fill="#0a2540" />
-                  <span className="text-[11px] font-bold text-[#0a2540] leading-tight">
-                    Selected
+                  <TeamSilhouetteIcon className="w-8 h-8 text-[#0a2540] mb-1.5" fill="#0a2540" />
+                  <span className="text-sm font-black text-[#0a2540] leading-tight">
+                    High Potential
                   </span>
-                  <span className="text-xs font-black text-[#0a2540] leading-tight">
-                    High-Potential
-                  </span>
-                  <span className="text-[11px] font-bold text-[#0a2540] leading-tight">
-                    Student Projects
+                  <span className="text-xs font-bold text-[#0a2540] leading-tight mt-0.5">
+                    Students Ideas
                   </span>
                 </div>
               </div>
@@ -419,6 +413,208 @@ const InnovationPathways = () => {
               {MOBILE_PATHWAYS.map((pathway) => (
                 <MobilePathwayCard key={pathway.id} pathway={pathway} />
               ))}
+            </div>
+          </div>
+
+          {/* STATE CHAMPIONSHIP PRIZE POOL FOR 30 WINNING TEAMS */}
+          <div className="mt-12 pt-10 border-t-2 border-[#d9ebf9]">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold border border-amber-300 mb-2">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                  <span>State Championship Awards &amp; Grants</span>
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-black text-[#0a2540] tracking-tight">
+                  State Innovation Prize Pool: ₹52.5 Lakhs
+                </h3>
+                <p className="mt-1 text-xs sm:text-sm text-slate-600 max-w-2xl font-medium">
+                  Direct financial endowments and prototype development grants awarded to <strong>30 Outstanding Teams</strong> (10 teams per category) across Assam.
+                </p>
+              </div>
+
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-emerald-50 border border-emerald-200/90 text-emerald-900 text-xs sm:text-sm font-black shadow-xs shrink-0">
+                <Trophy className="w-4 h-4 text-amber-500" />
+                <span>30 Winning Teams (10 / Category)</span>
+              </div>
+            </div>
+
+            {/* 3 Highlighted Category Prize Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
+              
+              {/* CATEGORY 1: Classes 6-8 */}
+              <div className="rounded-3xl bg-gradient-to-b from-[#edfbf4] to-white border-2 border-[#a7f3d0] p-6 flex flex-col justify-between shadow-xs hover:shadow-lg transition-all relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-28 h-28 bg-emerald-400/10 rounded-full blur-2xl pointer-events-none" />
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <span className="text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300/80">
+                      Category 1
+                    </span>
+                    <span className="text-xs font-bold text-emerald-700 bg-white/80 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                      10 Teams
+                    </span>
+                  </div>
+                  <h4 className="text-xl font-black text-slate-900">Classes 6–8</h4>
+                  <p className="text-xs text-slate-500 mt-1 font-medium">Junior Innovator League</p>
+
+                  <div className="mt-5 space-y-3">
+                    {/* Top 5 */}
+                    <div className="p-3.5 rounded-2xl bg-white border border-emerald-200/80 shadow-2xs flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700 font-black text-xs shrink-0">
+                          <Trophy className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-slate-700">Top 5 Teams</div>
+                          <div className="text-[11px] text-slate-400">Ranks 1 to 5</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-base font-black text-emerald-800">₹1 Lakh</div>
+                        <div className="text-[10px] text-slate-400">per team</div>
+                      </div>
+                    </div>
+
+                    {/* Next 5 */}
+                    <div className="p-3.5 rounded-2xl bg-white border border-emerald-200/80 shadow-2xs flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-black text-xs shrink-0">
+                          <Medal className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-slate-700">Next 5 Teams</div>
+                          <div className="text-[11px] text-slate-400">Ranks 6 to 10</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-base font-black text-emerald-700">₹50,000</div>
+                        <div className="text-[10px] text-slate-400">per team</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-emerald-100 flex items-center justify-between text-xs font-bold text-emerald-900">
+                  <span>Category Total Pool</span>
+                  <span className="text-sm font-black text-emerald-800">₹7.5 Lakhs</span>
+                </div>
+              </div>
+
+              {/* CATEGORY 2: Classes 9-10 */}
+              <div className="rounded-3xl bg-gradient-to-b from-[#fff6ee] to-white border-2 border-[#fed7aa] p-6 flex flex-col justify-between shadow-xs hover:shadow-lg transition-all relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-28 h-28 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <span className="text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300/80">
+                      Category 2
+                    </span>
+                    <span className="text-xs font-bold text-amber-700 bg-white/80 px-2.5 py-0.5 rounded-full border border-amber-200">
+                      10 Teams
+                    </span>
+                  </div>
+                  <h4 className="text-xl font-black text-slate-900">Classes 9–10</h4>
+                  <p className="text-xs text-slate-500 mt-1 font-medium">Intermediate Innovator League</p>
+
+                  <div className="mt-5 space-y-3">
+                    {/* Top 5 */}
+                    <div className="p-3.5 rounded-2xl bg-white border border-amber-200/80 shadow-2xs flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700 font-black text-xs shrink-0">
+                          <Trophy className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-slate-700">Top 5 Teams</div>
+                          <div className="text-[11px] text-slate-400">Ranks 1 to 5</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-base font-black text-amber-800">₹2 Lakhs</div>
+                        <div className="text-[10px] text-slate-400">per team</div>
+                      </div>
+                    </div>
+
+                    {/* Next 5 */}
+                    <div className="p-3.5 rounded-2xl bg-white border border-amber-200/80 shadow-2xs flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-black text-xs shrink-0">
+                          <Medal className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-slate-700">Next 5 Teams</div>
+                          <div className="text-[11px] text-slate-400">Ranks 6 to 10</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-base font-black text-amber-700">₹1 Lakh</div>
+                        <div className="text-[10px] text-slate-400">per team</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-amber-100 flex items-center justify-between text-xs font-bold text-amber-900">
+                  <span>Category Total Pool</span>
+                  <span className="text-sm font-black text-amber-800">₹15 Lakhs</span>
+                </div>
+              </div>
+
+              {/* CATEGORY 3: Classes 11-12 */}
+              <div className="rounded-3xl bg-gradient-to-b from-[#edf6fd] to-white border-2 border-[#bae6fd] p-6 flex flex-col justify-between shadow-xs hover:shadow-lg transition-all relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-28 h-28 bg-blue-400/10 rounded-full blur-2xl pointer-events-none" />
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <span className="text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full bg-blue-100 text-blue-900 border border-blue-300/80">
+                      Category 3
+                    </span>
+                    <span className="text-xs font-bold text-blue-700 bg-white/80 px-2.5 py-0.5 rounded-full border border-blue-200">
+                      10 Teams
+                    </span>
+                  </div>
+                  <h4 className="text-xl font-black text-slate-900">Classes 11–12</h4>
+                  <p className="text-xs text-slate-500 mt-1 font-medium">Senior Innovator League</p>
+
+                  <div className="mt-5 space-y-3">
+                    {/* Top 5 */}
+                    <div className="p-3.5 rounded-2xl bg-white border border-blue-200/80 shadow-2xs flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700 font-black text-xs shrink-0">
+                          <Trophy className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-slate-700">Top 5 Teams</div>
+                          <div className="text-[11px] text-slate-400">Ranks 1 to 5</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-base font-black text-blue-900">₹4 Lakhs</div>
+                        <div className="text-[10px] text-slate-400">per team</div>
+                      </div>
+                    </div>
+
+                    {/* Next 5 */}
+                    <div className="p-3.5 rounded-2xl bg-white border border-blue-200/80 shadow-2xs flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-black text-xs shrink-0">
+                          <Medal className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-slate-700">Next 5 Teams</div>
+                          <div className="text-[11px] text-slate-400">Ranks 6 to 10</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-base font-black text-blue-800">₹2 Lakhs</div>
+                        <div className="text-[10px] text-slate-400">per team</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-blue-100 flex items-center justify-between text-xs font-bold text-blue-900">
+                  <span>Category Total Pool</span>
+                  <span className="text-sm font-black text-blue-900">₹30 Lakhs</span>
+                </div>
+              </div>
+
             </div>
           </div>
 

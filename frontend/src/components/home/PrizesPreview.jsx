@@ -6,31 +6,34 @@ import { Link } from 'react-router-dom';
 const prizeCategories = [
   {
     category: 'Category 1: Classes VI–VIII',
+    poolBadge: '₹7.5L Pool (10 Teams)',
     color: 'border-emerald-200 bg-gradient-to-b from-emerald-50/50 to-white',
     badgeColor: 'bg-emerald-100 text-emerald-900',
     awards: [
-      { title: 'Category Winner', type: 'Gold Trophy + Merit Citation', icon: Trophy, color: 'text-amber-500' },
-      { title: 'First Runner-Up', type: 'Silver Trophy + Merit Citation', icon: Medal, color: 'text-slate-400' },
+      { title: 'Top 5 Teams', type: '₹1 Lakh each + Gold Accolades', icon: Trophy, color: 'text-amber-500' },
+      { title: 'Next 5 Teams', type: '₹50,000 each + Merit Citation', icon: Medal, color: 'text-slate-400' },
       { title: 'Special Recognition', type: 'Ecology & Community Award', icon: Award, color: 'text-emerald-600' }
     ]
   },
   {
     category: 'Category 2: Classes IX–X',
+    poolBadge: '₹15L Pool (10 Teams)',
     color: 'border-amber-200 bg-gradient-to-b from-amber-50/50 to-white',
     badgeColor: 'bg-amber-100 text-amber-900',
     awards: [
-      { title: 'Category Winner', type: 'Gold Trophy + Hardware Incubation', icon: Trophy, color: 'text-amber-500' },
-      { title: 'First Runner-Up', type: 'Silver Trophy + Merit Citation', icon: Medal, color: 'text-slate-400' },
+      { title: 'Top 5 Teams', type: '₹2 Lakhs each + Incubation', icon: Trophy, color: 'text-amber-500' },
+      { title: 'Next 5 Teams', type: '₹1 Lakh each + Merit Citation', icon: Medal, color: 'text-slate-400' },
       { title: 'Special Recognition', type: 'Engineering Novelty Award', icon: Award, color: 'text-amber-600' }
     ]
   },
   {
     category: 'Category 3: Classes XI–XII',
+    poolBadge: '₹30L Pool (10 Teams)',
     color: 'border-blue-200 bg-gradient-to-b from-blue-50/50 to-white',
     badgeColor: 'bg-blue-100 text-blue-900',
     awards: [
-      { title: 'Category Winner', type: 'Gold Trophy + IIT Delhi Mentorship', icon: Trophy, color: 'text-amber-500' },
-      { title: 'First Runner-Up', type: 'Silver Trophy + State Citation', icon: Medal, color: 'text-slate-400' },
+      { title: 'Top 5 Teams', type: '₹4 Lakhs each + IIT Delhi Mentorship', icon: Trophy, color: 'text-amber-500' },
+      { title: 'Next 5 Teams', type: '₹2 Lakhs each + State Citation', icon: Medal, color: 'text-slate-400' },
       { title: 'Special Recognition', type: 'Commercial Scalability Award', icon: Award, color: 'text-blue-600' }
     ]
   }
@@ -63,9 +66,14 @@ const PrizesPreview = () => {
               transition={{ duration: 0.4, delay: idx * 0.1 }}
               className={`p-6 sm:p-7 rounded-3xl border shadow-sm ${cat.color}`}
             >
-              <span className={`text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full ${cat.badgeColor}`}>
-                {cat.category}
-              </span>
+              <div className="flex items-center justify-between gap-2">
+                <span className={`text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full ${cat.badgeColor}`}>
+                  {cat.category}
+                </span>
+                <span className="text-[11px] font-black text-slate-800 bg-white/90 px-2.5 py-0.5 rounded-full border border-slate-200">
+                  {cat.poolBadge}
+                </span>
+              </div>
 
               <div className="mt-6 space-y-4">
                 {cat.awards.map((aw) => {
@@ -88,10 +96,12 @@ const PrizesPreview = () => {
         </div>
 
         {/* Official Note as requested */}
-        <div className="mt-8 max-w-2xl mx-auto p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-4 text-xs text-slate-600">
+        <div className="mt-8 max-w-3xl mx-auto p-4 rounded-2xl bg-gradient-to-r from-emerald-50 via-amber-50 to-blue-50 border border-amber-300 flex items-center justify-between gap-4 text-xs text-slate-700">
           <div className="flex items-center gap-2">
-            <Info className="w-4 h-4 text-amber-600 shrink-0" />
-            <span>Official prize details and monetary endowments will be announced by the organizing committee.</span>
+            <Trophy className="w-4 h-4 text-amber-600 shrink-0" />
+            <span className="font-medium">
+              <strong className="text-amber-950 font-bold">State Innovation Prize Pool: ₹52.5 Lakhs</strong> awarded to 30 Winning Teams (10 per category) across Assam.
+            </span>
           </div>
           <Link to="/prizes" className="text-emerald-800 hover:text-emerald-950 font-bold shrink-0 flex items-center gap-1">
             <span>Read More</span>

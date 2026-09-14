@@ -2,7 +2,7 @@ import React from 'react';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import Hero from '../components/home/Hero';
-import AssamScrollJourney from '../components/home/AssamScrollJourney';
+import StageMilestones from '../components/home/StageMilestones';
 import FunnelVisualization from '../components/home/FunnelVisualization';
 import StatsSection from '../components/home/StatsSection';
 import InnovationThemes from '../components/home/InnovationThemes';
@@ -10,7 +10,7 @@ import PrizesPreview from '../components/home/PrizesPreview';
 import LeaderboardPreview from '../components/home/LeaderboardPreview';
 import CallToAction from '../components/home/CallToAction';
 import InnovationPathways from '../components/home/InnovationPathways';
-import { ShieldCheck, BookOpen, Users, Compass, ArrowRight, Lightbulb } from 'lucide-react';
+import { ShieldCheck, BookOpen, Users, Compass, ArrowRight, Lightbulb, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Home = () => {
@@ -35,7 +35,7 @@ const Home = () => {
                   Nurturing Grassroots Innovation Across Assam's Schools
                 </h2>
                 <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
-                  The Assam Future Innovation Program (AFIP) is an unprecedented initiative by the <strong>Technology Innovation Hub of IIT Delhi (IHFC)</strong> in partnership with <strong>Samagra Shiksha, Assam</strong>.
+                  The Assam Future Innovation Program (AFIP) is an unprecedented initiative by the <strong>Innovation hub for cobotics (IHFC)</strong> in partnership with <strong>ASOM, Assam</strong>.
                 </p>
                 <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
                   Rather than a conventional theoretical exam, this state-wide competition invites students from rural, tea garden, island (char), and urban schools to identify tangible local bottlenecks—such as annual Brahmaputra flooding, tea plucking ergonomics, and bamboo upcycling—and engineer functioning hardware and software prototypes.
@@ -66,8 +66,12 @@ const Home = () => {
                     <p className="text-xs text-slate-500 mt-2 leading-relaxed">
                       Fostering early scientific curiosity, foundational electronics, and creative community observation.
                     </p>
+                    <div className="mt-3.5 p-2.5 rounded-2xl bg-emerald-50 border border-emerald-200/90 text-xs">
+                      <span className="font-black text-emerald-950 block">🏆 ₹7.5L Pool (10 Teams)</span>
+                      <span className="text-emerald-800 text-[11px] block mt-0.5 font-medium">Top 5: ₹1L each • Next 5: ₹50k</span>
+                    </div>
                   </div>
-                  <div className="mt-6 pt-4 border-t border-slate-200 text-xs font-bold text-emerald-700">
+                  <div className="mt-4 pt-3 border-t border-slate-200 text-xs font-bold text-emerald-700">
                     Junior Innovators
                   </div>
                 </div>
@@ -79,8 +83,12 @@ const Home = () => {
                     <p className="text-xs text-slate-500 mt-2 leading-relaxed">
                       Applied microcontroller systems, design thinking, sensory devices, and local environmental problem solving.
                     </p>
+                    <div className="mt-3.5 p-2.5 rounded-2xl bg-amber-50 border border-amber-200/90 text-xs">
+                      <span className="font-black text-amber-950 block">🏆 ₹15L Pool (10 Teams)</span>
+                      <span className="text-amber-800 text-[11px] block mt-0.5 font-medium">Top 5: ₹2L each • Next 5: ₹1L</span>
+                    </div>
                   </div>
-                  <div className="mt-6 pt-4 border-t border-slate-200 text-xs font-bold text-amber-700">
+                  <div className="mt-4 pt-3 border-t border-slate-200 text-xs font-bold text-amber-700">
                     Intermediate Innovators
                   </div>
                 </div>
@@ -92,8 +100,12 @@ const Home = () => {
                     <p className="text-xs text-slate-500 mt-2 leading-relaxed">
                       Advanced coding, IoT, AI models, hardware mechanics, and scalable venture prototyping.
                     </p>
+                    <div className="mt-3.5 p-2.5 rounded-2xl bg-blue-50 border border-blue-200/90 text-xs">
+                      <span className="font-black text-blue-950 block">🏆 ₹30L Pool (10 Teams)</span>
+                      <span className="text-blue-800 text-[11px] block mt-0.5 font-medium">Top 5: ₹4L each • Next 5: ₹2L</span>
+                    </div>
                   </div>
-                  <div className="mt-6 pt-4 border-t border-slate-200 text-xs font-bold text-blue-700">
+                  <div className="mt-4 pt-3 border-t border-slate-200 text-xs font-bold text-blue-700">
                     Senior Innovators
                   </div>
                 </div>
@@ -102,11 +114,11 @@ const Home = () => {
           </div>
         </section>
 
-        {/* INNOVATION ACCELERATION PATHWAYS */}
+        {/* INNOVATION ACCELERATION PATHWAYS & HIGHLIGHTED STATE PRIZE POOL */}
         <InnovationPathways />
 
-        {/* 3. MOST IMPORTANT REQUIREMENT: SCROLL-DRIVEN ASSAM ANIMATION EXPERIENCE */}
-        <AssamScrollJourney />
+        {/* SWAPPED: STAGE-BY-STAGE MILESTONES & SCHEDULE ON HOME PAGE */}
+        <StageMilestones />
 
         {/* 4. PROGRAM IMPACT / NUMBERS */}
         <StatsSection />
@@ -114,7 +126,7 @@ const Home = () => {
         {/* 5. FUNNEL VISUALIZATION */}
         <FunnelVisualization />
 
-        {/* 6. 14 INNOVATION THEMES */}
+        {/* 6. LIST OF 15 INNOVATION THEMES (SSA) */}
         <InnovationThemes />
 
         {/* 7. PRIZES & AWARDS */}

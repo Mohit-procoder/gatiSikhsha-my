@@ -9,10 +9,10 @@ const funnelSteps = [
   { label: 'Stage 4: MCQ Benchmark Assessment', count: '70,000 Teams Evaluated', width: 'w-[76%]', bg: 'bg-teal-700', text: 'text-white' },
   { label: 'Stage 5: District Level Shortlisting', count: '5,000 Teams (~70 / District)', width: 'w-[68%]', bg: 'bg-amber-600', text: 'text-white' },
   { label: 'Stage 6: Self-Paced Advance Learning', count: '5,000 Teams Prototyping', width: 'w-[60%]', bg: 'bg-amber-700', text: 'text-amber-50' },
-  { label: 'Stage 7a: Coding (9–12) & MCQ (6–8)', count: '5,000 Teams Benchmarked', width: 'w-[52%]', bg: 'bg-amber-800', text: 'text-white' },
-  { label: 'Stage 7b: Offline Jury Round (Soft Skills)', count: '1,980 Teams (Top 20 / District)', width: 'w-[44%]', bg: 'bg-blue-800', text: 'text-blue-50' },
-  { label: 'Stage 8: 5-Day State Hackathon (72h Live)', count: '150 Finalists (50 / Category)', width: 'w-[34%]', bg: 'bg-indigo-800', text: 'text-white' },
-  { label: 'Stage 9: State Champions & Pathways', count: '30 Winners (10 / Category)', width: 'w-[24%]', bg: 'bg-gradient-to-r from-amber-500 to-amber-600', text: 'text-slate-950 font-extrabold' }
+  { label: 'Stage 7: Coding (9–12) & MCQ (6–8)', count: '5,000 Teams Benchmarked', width: 'w-[52%]', bg: 'bg-amber-800', text: 'text-white' },
+  { label: 'Stage 8: Offline Jury Round (Soft Skills)', count: '1,980 Teams (Top 20 / District)', width: 'w-[44%]', bg: 'bg-blue-800', text: 'text-blue-50' },
+  { label: 'Stage 9: 5-Day State Hackathon (72h Live)', count: '150 Finalists (50 / Category)', width: 'w-[34%]', bg: 'bg-indigo-800', text: 'text-white' },
+  { label: 'Stage 10: State Champions & Pathways', count: '30 Winners (10 / Category)', width: 'w-[24%]', bg: 'bg-gradient-to-r from-amber-500 to-amber-600', text: 'text-slate-950 font-extrabold' }
 ];
 
 const FunnelVisualization = () => {
