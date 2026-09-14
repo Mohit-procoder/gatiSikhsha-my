@@ -22,9 +22,11 @@ def init_db(app):
         _setup_indexes(_database)
         return _database
 
+    is_atlas = "mongodb+srv://" in mongo_uri or "mongodb://" in mongo_uri and "localhost" not in mongo_uri
+
     try:
-        # Fast 2-second timeout to check live MongoDB connectivity
-        client = MongoClient(mongo_uri, serverSelectionTimeoutMS=2000)
+        # 15-second timeout for cloud MongoDB Atlas TLS handshake & connectivity
+        client = MongoClient(mongo_uri, serverSelectionTimeoutMS=15000, connectTimeoutMS=15000)
         client.admin.command("ping")
         _mongo_client = client
         # Extract db name from URI or fallback to afip_database
@@ -32,6 +34,9 @@ def init_db(app):
         _database = _mongo_client[db_name]
         logger.info(f"[DB] Successfully connected to live MongoDB database: {db_name}")
     except (ServerSelectionTimeoutError, ConnectionFailure, Exception) as e:
+        if is_atlas:
+            logger.error(f"[DB] Failed to connect to configured MongoDB Atlas cluster: {e}")
+            raise RuntimeError(f"Could not connect to MongoDB Atlas cluster at {mongo_uri[:25]}... Error: {e}")
         logger.warning(f"[DB] Live MongoDB server unavailable ({e}). Fallback to mongomock for zero-config demo operation.")
         _mongo_client = mongomock.MongoClient()
         _database = _mongo_client.afip_database
@@ -42,17 +47,33 @@ def init_db(app):
 def get_db():
     global _database
     if _database is None:
-        _mongo_client = mongomock.MongoClient()
-        _database = _mongo_client.afip_database
-        _setup_indexes(_database)
+        raise RuntimeError("Database not initialized. Please call init_db(app) before get_db().")
     return _database
 
 def _setup_indexes(db):
     try:
         db.users.create_index([("email", ASCENDING)], unique=True)
-        db.schools.create_index([("school_code", ASCENDING)], unique=True, sparse=True)
+        # Drop legacy index if it exists without partialFilterExpression
+        try:
+            db.schools.drop_index("school_code_1")
+        except Exception:
+            pass
+        try:
+            db.teams.drop_index("team_code_1")
+        except Exception:
+            pass
+
+        db.schools.create_index(
+            [("school_code", ASCENDING)],
+            unique=True,
+            partialFilterExpression={"school_code": {"$type": "string"}}
+        )
         db.schools.create_index([("user_id", ASCENDING)])
-        db.teams.create_index([("team_code", ASCENDING)], unique=True, sparse=True)
+        db.teams.create_index(
+            [("team_code", ASCENDING)],
+            unique=True,
+            partialFilterExpression={"team_code": {"$type": "string"}}
+        )
         db.teams.create_index([("school_id", ASCENDING)])
         db.evaluation_assignments.create_index(
             [("project_id", ASCENDING), ("evaluator_id", ASCENDING)], unique=True

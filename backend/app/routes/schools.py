@@ -131,7 +131,6 @@ def register_school():
             "phone": data.get("coordinator_phone", "").strip() or data.get("official_phone", "").strip(),
             "designation": data.get("coordinator_designation", "Innovation Mentor")
         },
-        "school_code": None,  # Generated upon admin approval
         "status": "pending",
         "rejection_reason": None,
         "created_at": now,

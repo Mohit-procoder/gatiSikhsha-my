@@ -35,6 +35,13 @@ def create_app(config_class=Config):
     # Initialize Database
     init_db(app)
 
+    # Auto-seed initial accounts if database is fresh (safe idempotency check inside seed_database)
+    try:
+        from seed.seed_data import seed_database
+        seed_database(app)
+    except Exception as e:
+        logging.getLogger(__name__).debug(f"[SEED NOTE] {e}")
+
     from app.routes.auth import auth_bp
     from app.routes.schools import schools_bp
     from app.routes.teams import teams_bp
