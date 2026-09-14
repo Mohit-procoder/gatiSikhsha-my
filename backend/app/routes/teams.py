@@ -12,13 +12,22 @@ from app.utils.audit import log_audit_event
 teams_bp = Blueprint("teams", __name__, url_prefix="/api/v1/teams")
 
 @teams_bp.route("", methods=["POST"])
-@role_required("school")
+@role_required("mentor")
 def create_team():
     user_id = get_jwt_identity()
     db = get_db()
-    school = db.schools.find_one({"user_id": parse_object_id(user_id)})
+    mentor = db.mentors.find_one({"user_id": parse_object_id(user_id)})
+    if not mentor:
+        return api_error("NOT_FOUND", "Mentor profile not found.", status_code=404)
+
+    # Enforce strict 1-team maximum limit per mentor
+    existing_teams_count = db.teams.count_documents({"mentor_id": mentor["_id"]})
+    if existing_teams_count >= 1:
+        return api_error("TEAM_LIMIT_EXCEEDED", "Each mentor can create at most 1 team. You have already formed a team.", status_code=400)
+
+    school = db.schools.find_one({"_id": mentor.get("school_id")})
     if not school:
-        return api_error("NOT_FOUND", "School not found.", status_code=404)
+        return api_error("NOT_FOUND", "Mentor's associated school not found.", status_code=404)
 
     if school.get("status") != "approved":
         return api_error("FORBIDDEN", "Only approved schools with an active School Code can form competition teams.", status_code=403)
@@ -26,96 +35,54 @@ def create_team():
     data = request.get_json() or {}
     team_name = data.get("team_name", "").strip()
     category = data.get("category", "").strip()
+    
+    # Leader required fields (* marked)
     leader_name = data.get("leader_name", "").strip()
     leader_email = data.get("leader_email", "").strip().lower()
-    leader_phone = data.get("leader_phone", "").strip()
-    leader_grade = data.get("leader_grade", "")
-    members = data.get("members", [])  # list of {name, email, grade, phone, gender}
+    leader_phone = data.get("leader_phone", "").strip() or data.get("leader_mobile_no", "").strip()
+    leader_grade = data.get("leader_grade", "").strip()
+    leader_photo = data.get("leader_photo", "").strip()
+    leader_father_name = data.get("leader_father_name", "").strip()
+    leader_mother_name = data.get("leader_mother_name", "").strip()
     
-    # Mentor handling: existing mentor_id OR new mentor object
-    mentor_id_str = data.get("mentor_id")
-    new_mentor_data = data.get("new_mentor")
+    members = data.get("members", [])  # list of {name, email, phone, grade, photo, father_name, mother_name}
 
-    if not team_name or not category or not leader_name or not leader_email:
-        return api_error("VALIDATION_ERROR", "Team name, category, leader name, and leader email are required.", status_code=400)
+    if not team_name or not category:
+        return api_error("VALIDATION_ERROR", "Team name and category are required.", status_code=400)
 
     allowed_cats = ["VI-VIII", "IX-X", "XI-XII"]
     if category not in allowed_cats:
         return api_error("VALIDATION_ERROR", f"Category must be one of {allowed_cats}", status_code=400)
 
+    # Validate Team Leader mandatory fields (* marked)
+    if not leader_name or not leader_email or not leader_phone or not leader_grade or not leader_photo or not leader_father_name or not leader_mother_name:
+        return api_error("VALIDATION_ERROR", "All Team Leader fields (Full Name, Grade, Student Photo, Father's Name, Mother's Name, Mobile No, Email ID) are mandatory.", status_code=400)
+
     # Configurable Team size validation (min 1 leader + up to 4 members = max 5)
     valid_members = [m for m in members if m.get("name") and m.get("name").strip()]
     total_students = 1 + len(valid_members)
     if total_students > 5:
-        return api_error("TEAM_LIMIT_EXCEEDED", "Team cannot have more than 5 student members.", status_code=400)
+        return api_error("TEAM_LIMIT_EXCEEDED", "Team cannot have more than 5 student members (1 leader + up to 4 members).", status_code=400)
+
+    # Validate all member mandatory fields (* marked)
+    for idx, m in enumerate(valid_members):
+        m_name = m.get("name", "").strip()
+        m_grade = m.get("grade", "").strip()
+        m_photo = m.get("photo", "").strip()
+        m_father = m.get("father_name", "").strip()
+        m_mother = m.get("mother_name", "").strip()
+        m_phone = m.get("phone", "").strip() or m.get("mobile_no", "").strip()
+        m_email = m.get("email", "").strip().lower()
+
+        if not m_name or not m_grade or not m_photo or not m_father or not m_mother or not m_phone or not m_email:
+            return api_error("VALIDATION_ERROR", f"All fields (Full Name, Grade, Student Photo, Father's Name, Mother's Name, Mobile No, Email ID) are mandatory for Member #{idx + 1}.", status_code=400)
 
     now = datetime.now(timezone.utc)
-    school_district = school.get("district", "Kamrup")
+    school_district = school.get("district", mentor.get("district", "Kamrup"))
     school_id_tag = school.get("school_code") or school.get("school_custom_id") or str(school["_id"])
 
-    # Resolve or create mentor
-    assigned_mentor_id = None
-    assigned_mentor_name = ""
-    if mentor_id_str:
-        m_oid = parse_object_id(mentor_id_str)
-        mentor_rec = db.mentors.find_one({"_id": m_oid, "school_id": school["_id"]})
-        if mentor_rec:
-            assigned_mentor_id = mentor_rec["_id"]
-            assigned_mentor_name = mentor_rec.get("full_name", "")
-    elif new_mentor_data and new_mentor_data.get("name") and new_mentor_data.get("email"):
-        m_name = new_mentor_data.get("name", "").strip()
-        m_email = new_mentor_data.get("email", "").strip().lower()
-        m_phone = new_mentor_data.get("phone", "").strip()
-        m_desig = new_mentor_data.get("designation", "Innovation Mentor").strip()
-        
-        # Check if mentor user already exists
-        existing_m_u = db.users.find_one({"email": m_email})
-        if not existing_m_u:
-            tot_u = db.users.count_documents({}) + 1
-            m_user_custom_id = generate_user_id("mentor", tot_u)
-            m_u_res = db.users.insert_one({
-                "user_id": m_user_custom_id,
-                "email": m_email,
-                "phone": m_phone,
-                "password_hash": hash_password(new_mentor_data.get("password") or "Mentor@123"),
-                "role": "mentor",
-                "name": m_name,
-                "district": school_district,
-                "status": "active",
-                "is_verified": True,
-                "created_at": now,
-                "updated_at": now
-            })
-            m_uid = m_u_res.inserted_id
-        else:
-            m_uid = existing_m_u["_id"]
-
-        m_count = db.mentors.count_documents({}) + 1
-        m_custom_id = generate_mentor_id(m_count)
-        while db.mentors.find_one({"mentor_custom_id": m_custom_id}):
-            m_count += 1
-            m_custom_id = generate_mentor_id(m_count)
-
-        m_res = db.mentors.insert_one({
-            "user_id": m_uid,
-            "mentor_custom_id": m_custom_id,
-            "school_id": school["_id"],
-            "school_name": school.get("school_name", ""),
-            "district": school_district,
-            "full_name": m_name,
-            "email": m_email,
-            "phone": m_phone,
-            "designation": m_desig,
-            "status": "active",
-            "created_at": now,
-            "updated_at": now
-        })
-        assigned_mentor_id = m_res.inserted_id
-        assigned_mentor_name = m_name
-
-        log_audit_event(str(user_id), "school", "MENTOR_CREATED", "mentors", str(assigned_mentor_id), {"name": m_name, "email": m_email})
-    else:
-        assigned_mentor_name = data.get("mentor_name", school.get("coordinator", {}).get("name", ""))
+    assigned_mentor_id = mentor["_id"]
+    assigned_mentor_name = mentor.get("full_name", "")
 
     # Server-generated unique Team ID and Code
     count = db.teams.count_documents({}) + 1
@@ -186,15 +153,25 @@ def create_team():
         "email": leader_email,
         "phone": leader_phone,
         "grade": leader_grade,
+        "photo": leader_photo,
+        "father_name": leader_father_name,
+        "mother_name": leader_mother_name,
         "is_leader": True,
         "created_at": now,
         "updated_at": now
     }
     db.students.insert_one(leader_doc)
 
-    # Insert additional team members
+    # Insert additional team members with all mandatory fields
     for m in valid_members:
+        m_name = m.get("name", "").strip()
         m_email = m.get("email", "").strip().lower()
+        m_phone = m.get("phone", "").strip() or m.get("mobile_no", "").strip()
+        m_grade = m.get("grade", leader_grade).strip()
+        m_photo = m.get("photo", "").strip()
+        m_father = m.get("father_name", "").strip()
+        m_mother = m.get("mother_name", "").strip()
+
         m_user_id = None
         if m_email:
             existing = db.users.find_one({"email": m_email})
@@ -204,9 +181,10 @@ def create_team():
                 u_res = db.users.insert_one({
                     "user_id": m_u_custom,
                     "email": m_email,
+                    "phone": m_phone,
                     "password_hash": hash_password("Student@123"),
                     "role": "student",
-                    "name": m["name"],
+                    "name": m_name,
                     "district": school_district,
                     "status": "active",
                     "is_verified": True,
@@ -225,32 +203,20 @@ def create_team():
             "team_id": team_id,
             "school_id": school["_id"],
             "district": school_district,
-            "full_name": m["name"],
+            "full_name": m_name,
             "email": m_email,
-            "grade": m.get("grade", leader_grade),
-            "phone": m.get("phone", ""),
-            "gender": m.get("gender", ""),
+            "phone": m_phone,
+            "grade": m_grade,
+            "photo": m_photo,
+            "father_name": m_father,
+            "mother_name": m_mother,
             "is_leader": False,
             "created_at": now,
             "updated_at": now
         })
 
-    # In-app notification for mentor if assigned
-    if assigned_mentor_id:
-        mentor_user_rec = db.mentors.find_one({"_id": assigned_mentor_id})
-        if mentor_user_rec and mentor_user_rec.get("user_id"):
-            db.notifications.insert_one({
-                "recipient_role": "mentor",
-                "recipient_id": mentor_user_rec["user_id"],
-                "title": "New Team Assigned",
-                "message": f"You have been assigned as Innovation Mentor to Team '{team_name}' ({team_custom_id}).",
-                "type": "team_assignment",
-                "is_read": False,
-                "created_at": now
-            })
-
     log_audit_event(
-        str(user_id), "school", "TEAM_CREATED", "teams", str(team_id),
+        str(user_id), "mentor", "TEAM_CREATED", "teams", str(team_id),
         {"team_code": team_code, "team_custom_id": team_custom_id, "team_name": team_name, "district": school_district}
     )
 
@@ -261,10 +227,10 @@ def create_team():
             "team_code": team_code,
             "team_name": team_name,
             "category": category,
-            "mentor_id": str(assigned_mentor_id) if assigned_mentor_id else None,
+            "mentor_id": str(assigned_mentor_id),
             "mentor_name": assigned_mentor_name
         },
-        message=f"Team '{team_name}' created successfully with ID {team_custom_id}.",
+        message=f"Team '{team_name}' created successfully with code {team_code}!",
         status_code=201
     )
 

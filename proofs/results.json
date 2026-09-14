@@ -1,0 +1,85 @@
+[
+  {
+    "name": "1. Homepage Branding, Hero & Navbar",
+    "status": "PASSED",
+    "duration": 4533,
+    "details": {
+      "title": "Brahmaputra Innovation Challenge | Viksit Assam and Viksit Bharat 2047",
+      "heroHeading": "Brahmaputra Innovation Challenge  Viksit Assam and Viksit Bharat 2047",
+      "proof": "01_homepage.png"
+    }
+  },
+  {
+    "name": "2. Student Journey Roadmap (/journey)",
+    "status": "PASSED",
+    "duration": 1257,
+    "details": {
+      "url": "http://localhost:5173/journey",
+      "proof": "02_journey.png"
+    }
+  },
+  {
+    "name": "3. Guidelines & Rules Page (/guidelines)",
+    "status": "PASSED",
+    "duration": 1125,
+    "details": {
+      "url": "http://localhost:5173/guidelines",
+      "proof": "03_guidelines.png"
+    }
+  },
+  {
+    "name": "4. Prizes & Recognition Page (/prizes)",
+    "status": "PASSED",
+    "duration": 1018,
+    "details": {
+      "url": "http://localhost:5173/prizes",
+      "proof": "04_prizes.png"
+    }
+  },
+  {
+    "name": "5. Innovation Leaderboard Page (/leaderboard)",
+    "status": "PASSED",
+    "duration": 2037,
+    "details": {
+      "url": "http://localhost:5173/leaderboard",
+      "proof": "05_leaderboard.png"
+    }
+  },
+  {
+    "name": "6. Innovations Showcase Page (/innovations)",
+    "status": "PASSED",
+    "duration": 1306,
+    "details": {
+      "url": "http://localhost:5173/innovations",
+      "proof": "06_innovations.png"
+    }
+  },
+  {
+    "name": "7. School Registration Page (/register/school)",
+    "status": "PASSED",
+    "duration": 908,
+    "details": {
+      "url": "http://localhost:5173/register/school",
+      "proof": "07_register_school.png"
+    }
+  },
+  {
+    "name": "8. Student Registration Page (/register/student)",
+    "status": "PASSED",
+    "duration": 863,
+    "details": {
+      "url": "http://localhost:5173/register/student",
+      "proof": "08_register_student.png"
+    }
+  },
+  {
+    "name": "9. Login & Admin Dashboard Access",
+    "status": "PASSED",
+    "duration": 3873,
+    "details": {
+      "currentUrl": "http://localhost:5173/admin/dashboard",
+      "heading": "Assam Future Innovation Program Administration",
+      "proof": "10_admin_dashboard.png"
+    }
+  }
+]

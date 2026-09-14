@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { useCompetition } from '../../context/CompetitionContext';
+import { useCompetition, DEFAULT_COMPETITION_ROUNDS } from '../../context/CompetitionContext';
 import api from '../../services/api';
 import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
@@ -19,25 +19,12 @@ const CATEGORY_GRADES = {
   'XI-XII': ['Class XI', 'Class XII']
 };
 
-const COMPETITION_STAGES = [
-  { id: 'registration', step: '01', name: 'School Registration', date: '17th - 30th Sep', status: 'completed' },
-  { id: 'orientation', step: '02', name: 'Team Orientation', date: '1st - 10th Oct', status: 'completed' },
-  { id: 'foundation_learning', step: '03', name: 'Foundation Learning', date: '10th - 22nd Oct', status: 'completed' },
-  { id: 'mcq_assessment', step: '04', name: 'MCQ Assessment', date: '23rd - 30th Oct', status: 'completed' },
-  { id: 'district_shortlisting', step: '05', name: 'District Shortlisting', date: '1st - 7th Nov', status: 'active' },
-  { id: 'advanced_learning', step: '06', name: 'Advanced Learning', date: '9th Nov - 6th Dec', status: 'locked' },
-  { id: 'coding_challenge', step: '07A', name: 'Coding Challenge', date: '14th - 19th Dec', status: 'locked' },
-  { id: 'jury_round', step: '07B', name: 'Jury Round', date: '21st - 26th Dec', status: 'locked' },
-  { id: 'hackathon', step: '08', name: '72-Hour Hackathon', date: '4th - 8th Jan', status: 'locked' },
-  { id: 'winners', step: '09', name: 'State Winners', date: 'Final Outcome', status: 'locked' },
-];
-
 const MentorDashboard = () => {
   const { user, profile } = useAuth();
   const { addToast } = useToast();
   const { rounds, activeRound, currentStage } = useCompetition();
 
-  const dynamicRoadmap = (rounds && rounds.length > 0 ? rounds : COMPETITION_STAGES).map((r, i) => ({
+  const dynamicRoadmap = (rounds && rounds.length > 0 ? rounds : DEFAULT_COMPETITION_ROUNDS).map((r, i) => ({
     id: r.id,
     step: r.step || (i + 1 < 10 ? `0${i + 1}` : `${i + 1}`),
     name: r.name,

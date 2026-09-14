@@ -55,6 +55,7 @@ def create_app(config_class=Config):
     from app.routes.notifications import notifications_bp
     from app.routes.mentors import mentors_bp
     from app.routes.districts import districts_bp
+    from app.routes.competition import competition_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(schools_bp)
@@ -69,6 +70,7 @@ def create_app(config_class=Config):
     app.register_blueprint(notifications_bp)
     app.register_blueprint(mentors_bp)
     app.register_blueprint(districts_bp)
+    app.register_blueprint(competition_bp)
 
     @app.route("/api/v1/health", methods=["GET"])
     def healthcheck():

@@ -5,6 +5,7 @@ from app.utils.db import get_db, parse_object_id, serialize_doc
 from app.utils.helpers import api_response, api_error, generate_school_code
 from app.middleware.auth_middleware import role_required
 from app.utils.audit import log_audit_event
+from app.routes.competition import DEFAULT_ROUNDS, get_or_initialize_competition_rounds
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/api/v1/admin")
 
@@ -430,7 +431,7 @@ def update_competition_stage():
     user_id = get_jwt_identity()
     db = get_db()
     data = request.get_json() or {}
-    new_stage = data.get("stage")
+    new_stage = data.get("stage") or data.get("active_round_id")
 
     stages = [
         "school_registration", "mentor_onboarding", "team_formation",
@@ -449,7 +450,103 @@ def update_competition_stage():
 
     log_audit_event(str(user_id), "admin", "COMPETITION_STAGE_UPDATED", "settings", None, {"new_stage": new_stage})
 
-    return api_response(message=f"Active competition stage updated to '{new_stage}'.")
+    annotated_rounds, current_stage, active_round = get_or_initialize_competition_rounds(db)
+    return api_response(
+        message=f"Active competition stage updated to '{new_stage}'.",
+        data={
+            "current_stage": current_stage,
+            "active_round_id": current_stage,
+            "active_round": active_round,
+            "rounds": annotated_rounds
+        }
+    )
+
+@admin_bp.route("/rounds/active", methods=["PATCH", "POST", "PUT"], strict_slashes=False)
+@role_required("admin")
+def alter_active_round():
+    user_id = get_jwt_identity()
+    db = get_db()
+    data = request.get_json() or {}
+    active_round_id = data.get("active_round_id") or data.get("round_id") or data.get("stage")
+
+    if not active_round_id:
+        return api_error("VALIDATION_ERROR", "Field 'active_round_id' is required.", status_code=400)
+
+    annotated_rounds, _, _ = get_or_initialize_competition_rounds(db)
+    valid_ids = [r["id"] for r in annotated_rounds]
+    if active_round_id not in valid_ids:
+        return api_error("VALIDATION_ERROR", f"Round ID must be one of: {valid_ids}", status_code=400)
+
+    db.settings.update_one(
+        {"key": "competition"},
+        {"$set": {"current_stage": active_round_id, "updated_at": datetime.utcnow()}},
+        upsert=True
+    )
+
+    log_audit_event(str(user_id), "admin", "COMPETITION_ROUND_ALTERED", "settings", None, {"active_round_id": active_round_id})
+
+    annotated_rounds, current_stage, active_round = get_or_initialize_competition_rounds(db)
+    return api_response(
+        message=f"Active competition round successfully set to '{active_round.get('name', active_round_id)}'.",
+        data={
+            "rounds": annotated_rounds,
+            "current_stage": current_stage,
+            "active_round_id": current_stage,
+            "active_round": active_round
+        }
+    )
+
+@admin_bp.route("/rounds/dates", methods=["PATCH", "POST", "PUT"], strict_slashes=False)
+@role_required("admin")
+def update_round_dates():
+    user_id = get_jwt_identity()
+    db = get_db()
+    data = request.get_json() or {}
+    round_id = data.get("round_id")
+    new_dates = data.get("dates")
+
+    if not round_id or not new_dates:
+        return api_error("VALIDATION_ERROR", "Both 'round_id' and 'dates' are required.", status_code=400)
+
+    get_or_initialize_competition_rounds(db)
+    settings = db.settings.find_one({"key": "competition"}) or {}
+    raw_rounds = settings.get("rounds", DEFAULT_ROUNDS)
+
+    round_found = False
+    updated_name = round_id
+    for r in raw_rounds:
+        if r.get("id") == round_id:
+            r["dates"] = str(new_dates).strip()
+            if "name" in data and data["name"]:
+                r["name"] = str(data["name"]).strip()
+            updated_name = r.get("name", round_id)
+            round_found = True
+            break
+
+    if not round_found:
+        return api_error("NOT_FOUND", f"Round '{round_id}' not found.", status_code=404)
+
+    db.settings.update_one(
+        {"key": "competition"},
+        {"$set": {"rounds": raw_rounds, "updated_at": datetime.utcnow()}},
+        upsert=True
+    )
+
+    log_audit_event(str(user_id), "admin", "COMPETITION_ROUND_DATES_UPDATED", "settings", None, {
+        "round_id": round_id,
+        "dates": new_dates
+    })
+
+    annotated_rounds, current_stage, active_round = get_or_initialize_competition_rounds(db)
+    return api_response(
+        message=f"Dates for '{updated_name}' successfully updated to '{new_dates}'.",
+        data={
+            "rounds": annotated_rounds,
+            "current_stage": current_stage,
+            "active_round_id": current_stage,
+            "active_round": active_round
+        }
+    )
 
 @admin_bp.route("/leaderboard-visibility", methods=["PATCH"])
 @role_required("admin")
