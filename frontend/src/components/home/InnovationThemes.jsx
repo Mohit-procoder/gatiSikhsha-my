@@ -149,7 +149,7 @@ const InnovationThemes = () => {
               List of 15 Themes
             </h2>
             <p className="text-base text-slate-600 mt-2 max-w-2xl font-medium">
-              Proposed by <strong className="text-emerald-900">SSA</strong> (Samagra Shiksha, Assam) but it's open for discussions.
+              Proposed by <strong className="text-emerald-900">SSA</strong> (Samagra Shiksha, Assam).
             </p>
           </div>
 
